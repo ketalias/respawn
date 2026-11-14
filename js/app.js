@@ -418,15 +418,30 @@ function spheres() {
   return `${seg.length > 1 ? `<div class="seg2 n${seg.length}">${seg.map(([v, n]) => `<button class="${ui.stab === v ? 'on' : ''}" data-act="stab" data-v="${v}">${n}</button>`).join('')}</div>` : ''}${body}`;
 }
 const VIEWS = { home, quests, money: money.view, spheres, locker, profile };
-function render() {
+// Every tap re-renders the screen from scratch. WebKit (Telegram on iPhone) drops the scroll position of a container whose
+// content is replaced, and inner scrollers (chip rows, idea lists) always restart at 0 — so positions are saved before and put back after.
+const INNER = '.chips.scroll, .seg2, .ideas';
+const snapScroll = (box, same = true) => box && same ? { box, y: box.scrollTop, x: [...box.querySelectorAll(INNER)].map(e => [e.scrollLeft, e.scrollTop]) } : null;
+function restoreScroll(k) {
+  if (!k) return;
+  const put = () => {
+    if (Math.abs(k.box.scrollTop - k.y) > 1) k.box.scrollTop = k.y;
+    k.box.querySelectorAll(INNER).forEach((e, i) => { const [x, y] = k.x[i] || [0, 0]; if (x && e.scrollLeft !== x) e.scrollLeft = x; if (y && e.scrollTop !== y) e.scrollTop = y; });
+  };
+  put(); requestAnimationFrame(put);
+}
+function render(opt) { // opt.top: this change should start the screen from the top (chip rows still keep their place)
   if (ui.tab === 'money') { ui.tab = 'spheres'; ui.stab = 'money'; } // old links / deep links
+  const keepView = snapScroll(view, view.dataset.tab === ui.tab), keepSheet = snapScroll($('#sph')?.closest('.sheet-body'));
   applyTheme(); cvReg = {};
+  if (keepView && opt?.top) keepView.y = 0;
   renderTop(); renderTabs();
   view.dataset.tab = ui.tab;
   view.innerHTML = (VIEWS[ui.tab] || VIEWS.home)();
   hydrate(view);
   const sph = $('#sph'); if (sph && ui.sphere) sph.innerHTML = sphereBody(ui.sphere); // open sphere card follows the game state
   renderRest();
+  restoreScroll(keepView); restoreScroll(keepSheet);
 }
 let enterTimer = null;
 function enter() { view.classList.add('enter'); clearTimeout(enterTimer); enterTimer = setTimeout(() => view.classList.remove('enter'), 520); }
@@ -542,7 +557,8 @@ function onboarding(root) {
   root.innerHTML = `<div class="ov intro ob">${OB.step ? obDots() : ''}${steps[OB.step]()}</div>`;
   hydrate(root);
 }
-const obRender = () => { if (obRoot) { onboarding(obRoot); obRoot.scrollTop = 0; } };
+// only a new step starts from the top; picking a look or a quest keeps you where you are
+const obRender = (newStep = false) => { if (!obRoot) return; const k = snapScroll(obRoot); onboarding(obRoot); if (newStep) obRoot.scrollTop = 0; else restoreScroll(k); };
 
 /* ---------- rest timer ---------- */
 function renderRest() {
@@ -569,10 +585,10 @@ const A = {
   go: el => {
     const same = ui.tab === el.dataset.tab;
     if (el.dataset.stab) ui.stab = el.dataset.stab;
-    go(el.dataset.tab); if (same && el.dataset.stab) render();
+    go(el.dataset.tab); if (same && el.dataset.stab) render({ top: true });
     sfx('tap'); buzz('light');
   },
-  stab: el => { ui.stab = el.dataset.v; sfx('tap'); render(); view.scrollTop = 0; },
+  stab: el => { ui.stab = el.dataset.v; sfx('tap'); render({ top: true }); },
   wallet: (el, e) => { sfx('tap'); if (G.tapWallet()) { sfx('coin'); buzz('success'); floatText('+1', e.clientX, e.clientY + 30); react({ x: e.clientX, y: e.clientY + 40 }); } },
   lamp: (el, e) => {
     ui.lampOff = !ui.lampOff; ui.lampTaps++; sfx(ui.lampOff ? 'undo' : 'tap'); buzz('light');
@@ -582,8 +598,8 @@ const A = {
   ver: (el, e) => { if (++ui.verTaps >= 7 && G.secret('dev')) { sfx('level'); react({ x: e.clientX, y: e.clientY }); } else if (ui.verTaps < 7) sfx('tap'); },
   'sheet-close': () => closeSheet(),
   'overlay-next': () => { sfx('tap'); nextOverlay(); render(); },
-  'ob-next': () => { const nm = $('#ob-name'); if (nm) S.name = nm.value.trim() || S.name; G.save(true); OB.step = Math.min(2, OB.step + 1); sfx('tap'); buzz('light'); obRender(); },
-  'ob-back': () => { OB.step = Math.max(0, OB.step - 1); sfx('tap'); obRender(); },
+  'ob-next': () => { const nm = $('#ob-name'); if (nm) S.name = nm.value.trim() || S.name; G.save(true); OB.step = Math.min(2, OB.step + 1); sfx('tap'); buzz('light'); obRender(true); },
+  'ob-back': () => { OB.step = Math.max(0, OB.step - 1); sfx('tap'); obRender(true); },
   'ob-eq': el => { const { slot, v } = el.dataset; S.eq[slot] = v; S.manual[slot] = true; G.save(true); sfx('tap'); buzz('light'); obRender(); stage('intro', S.eq, { w: 120, h: 96, floor: 14 }).st.jump(); },
   'ob-q': el => { const k = el.dataset.k; if (OB.q.has(k)) OB.q.delete(k); else OB.q.add(k); sfx('tap'); obRender(); },
   onboard: () => {
@@ -681,7 +697,7 @@ const A = {
       <div class="rows">${h.slice().reverse().slice(0, 8).map(x => `<div class="row static"><span class="row-t"><b>${setLabel(ex.type, x.top[0], x.top[1])}</b><small>${dateUA(x.d)}</small></span></div>`).join('')}</div>`);
   },
 
-  slot: el => { ui.slot = el.dataset.v; ui.tryOn = null; sfx('tap'); render(); view.scrollTop = 0; el = $(`.slots [data-v="${ui.slot}"]`); el?.scrollIntoView({ inline: 'nearest', block: 'nearest' }); },
+  slot: el => { ui.slot = el.dataset.v; ui.tryOn = null; sfx('tap'); render({ top: true }); },
   item: el => {
     const it = ITEM[el.dataset.id];
     if (G.has(it.id)) { ui.tryOn = null; G.equip(it.slot, it.key); sfx('done'); buzz('light'); stages.locker?.st.jump(); }
@@ -725,7 +741,7 @@ const A = {
   reset: async () => {
     if (!(await ask('Почати з нуля? Увесь прогрес, квести й скіни буде видалено. Скасувати це не можна.'))) return;
     G.resetAll(); Object.assign(ui, { tab: 'home', stab: 'spheres', qtab: 'daily', slot: 'top', tryOn: null, sphere: null }); Object.assign(OB, { step: 0, q: null });
-    closeSheet(); render(); view.scrollTop = 0; overlay(onboarding);
+    closeSheet(); render({ top: true }); overlay(onboarding);
   },
 };
 function refreshQuestForm() {
