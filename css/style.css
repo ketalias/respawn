@@ -405,3 +405,4 @@ select.field { appearance: none; -webkit-appearance: none; }
 #sph { display: contents; }
 .sph-h { display: flex; align-items: center; gap: 12px; } .sph-h .ico { width: 26px; height: 26px; color: var(--acc); }
 #qf-more { display: flex; flex-direction: column; gap: 10px; } #qf-more[hidden] { display: none; }
+.ob-g { display: flex; flex-direction: column; gap: 8px; width: 100%; } .ob-g > span { font-size: 11px; letter-spacing: .14em; text-transform: uppercase; color: var(--mut); text-align: left; }

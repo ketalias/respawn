@@ -62,7 +62,7 @@ function renderTop() {
   const L = G.level(), r = G.rank();
   topEl.innerHTML = `<button class="who" data-act="go" data-tab="profile">
       ${cv(() => spriteCanvas(G.lookOf(), HEAD), 'ava')}
-      <span class="who-t"><b>${esc(S.name || 'Гравець')}</b><small>LV ${L.lv} · ${r.name}</small></span>
+      <span class="who-t"><b>${esc(G.playerName())}</b><small>LV ${L.lv} · ${G.nm(r)}</small></span>
     </button>
     <div class="top-r">
       <span class="pill fire ${S.streak.cur ? '' : 'off'}">${icon('flame')}${S.streak.cur}</span>
@@ -90,7 +90,7 @@ function nextReward() {
     ${thumb}
     <div class="nx-b">
       <div class="lbl">Наступна нагорода · LV ${at}</div>
-      <div class="nx-t">${[evo ? `Ранг «${evo.name}»` : '', ...items.map(i => i.name)].filter(Boolean).join(' · ')}</div>
+      <div class="nx-t">${[evo ? `Ранг «${G.nm(evo)}»` : '', ...items.map(i => i.name)].filter(Boolean).join(' · ')}</div>
       <div class="nx-s">${icon('lock')}ще ${fmt(left)} XP</div>
     </div>
   </section>`;
@@ -105,7 +105,7 @@ function home() {
     <div class="stage-wrap" data-act="hero-tap">
       ${cv(() => stage('home', S.eq, { w: 120, h: 100, floor: 15 }).cv)}
       <div class="scan"></div>
-      <div class="hud tl"><div class="lvbig"><small>LV</small>${two(L.lv)}</div><div class="rank">${r.name}</div></div>
+      <div class="hud tl"><div class="lvbig"><small>LV</small>${two(L.lv)}</div><div class="rank">${G.nm(r)}</div></div>
       <div class="hud tr">${c > 1 ? `<span class="chip combo">COMBO ×${c}</span>` : ''}${S.eq.aura && ITEM['aura:' + S.eq.aura] ? `<span class="chip" style="color:${AURA[S.eq.aura]}">${ITEM['aura:' + S.eq.aura].name}</span>` : ''}</div>
       <div class="bubble" id="bubble"></div>
     </div>
@@ -177,7 +177,7 @@ function gym() {
   const prs = Object.entries(S.prs).sort((a, b) => (b[1].d || '').localeCompare(a[1].d || '')).slice(0, 6);
   return `<section class="card gym-hero">
       <div class="lbl">Журнал заліза</div>
-      <h2>${S.workouts.length ? 'Готовий до підходу?' : 'Перше тренування'}</h2>
+      <h2>${S.workouts.length ? G.g('Готовий до підходу?', 'Готова до підходу?') : 'Перше тренування'}</h2>
       <p>Кожен підхід — це XP. Побив рекорд — бонус +30 XP.</p>
       <button class="btn solid big" data-act="wk-start">${icon('play')}Почати тренування</button>
     </section>
@@ -274,7 +274,7 @@ function locker() {
       </div>
       <div class="locker-door">
         <div class="sticker big">${two(G.level().lv)}<small>LV</small></div>
-        <div class="sticker tape">${r.name}</div>
+        <div class="sticker tape">${G.nm(r)}</div>
         <div class="sticker dark">${ownedN}/${ITEMS.length}<small>скінів</small></div>
         <div class="vents"><i></i><i></i><i></i><i></i></div>
       </div>
@@ -328,9 +328,9 @@ function profile() {
       ${cv(() => spriteCanvas(G.lookOf(), [16, 0, 32, 44]), 'prof-ava')}
       <div class="prof-b">
         <div class="lbl">Online… день ${days}</div>
-        <button class="prof-name" data-act="name-edit">${esc(S.name || 'Гравець')}</button>
-        <div class="prof-rank">LV ${L.lv} · ${r.name}</div>
-        ${nr ? `<div class="ranks">${RANKS.map(x => `<i class="${L.lv >= x.lv ? 'on' : ''}" title="${x.name}"></i>`).join('')}</div><small>Наступний ранг: ${nr.name} на LV ${nr.lv}</small>` : '<small>Максимальний ранг. Ти і є фінальний бос.</small>'}
+        <button class="prof-name" data-act="name-edit">${esc(G.playerName())}</button>
+        <div class="prof-rank">LV ${L.lv} · ${G.nm(r)}</div>
+        ${nr ? `<div class="ranks">${RANKS.map(x => `<i class="${L.lv >= x.lv ? 'on' : ''}" title="${G.nm(x)}"></i>`).join('')}</div><small>Наступний ранг: ${G.nm(nr)} на LV ${nr.lv}</small>` : '<small>Максимальний ранг. Ти і є фінальний бос.</small>'}
       </div>
     </section>
     <section class="card attrs">
@@ -339,7 +339,7 @@ function profile() {
     </section>
     <section class="card"><div class="lbl">Активність · 17 тижнів</div>${heat()}</section>
     ${sec('Ачівки', `<span class="count">${got}/${ACHS.length}</span>`)}
-    <div class="achs">${ACHS.map(a => { const on = !!S.ach[a.id]; return `<button class="ach t-${a.tier} ${on ? 'on' : ''}" data-act="ach-open" data-id="${a.id}"><span class="ach-i">${icon(on ? a.icon : 'lock')}</span><small>${a.secret && !on ? '???' : a.name}</small></button>`; }).join('')}</div>
+    <div class="achs">${ACHS.map(a => { const on = !!S.ach[a.id]; return `<button class="ach t-${a.tier} ${on ? 'on' : ''}" data-act="ach-open" data-id="${a.id}"><span class="ach-i">${icon(on ? a.icon : 'lock')}</span><small>${a.secret && !on ? '???' : G.nm(a)}</small></button>`; }).join('')}</div>
     ${sec('Статистика')}
     <section class="card kvs">
       ${row('Усього XP', fmt(S.xp))}${row('Квестів виконано', fmt(S.counters.quests))}${row('Ідеальних днів', S.counters.perfect)}
@@ -348,6 +348,7 @@ function profile() {
     </section>
     ${sec('Налаштування')}
     <section class="card kvs">
+      <div class="kv"><span>Звертання</span><div class="chips">${[['m', 'Він'], ['f', 'Вона']].map(([v, n]) => `<button class="chip-b sm ${S.profile.g === v ? 'on' : ''}" data-act="set-g" data-v="${v}">${n}</button>`).join('')}</div></div>
       <div class="kv"><span>Звук</span><button class="sw ${S.settings.sound ? 'on' : ''}" data-act="set-toggle-opt" data-k="sound" aria-label="Звук"><i></i></button></div>
       <div class="kv"><span>Вібрація</span><button class="sw ${S.settings.haptics ? 'on' : ''}" data-act="set-toggle-opt" data-k="haptics" aria-label="Вібрація"><i></i></button></div>
       <div class="kv"><span>Відпочинок між підходами</span><div class="chips">${[0, 60, 90, 120, 180].map(v => `<button class="chip-b sm ${S.settings.rest === v ? 'on' : ''}" data-act="set-rest" data-v="${v}">${v ? v + 'с' : 'вимк'}</button>`).join('')}</div></div>
@@ -429,7 +430,7 @@ function react(pt) {
     if (e.t === 'ath') { setTimeout(() => { toast(`${icon('chart')}<div><b>Новий ATH</b><small>Це твій найкращий місяць</small></div>`, 'gold', 3400); rain(60); }, 400 + delay); delay += 600; }
     if (e.t === 'perfect') { setTimeout(() => { toast(`${icon('star')}<div><b>Ідеальний день</b><small>+${e.xp} XP · +${e.coins} монет</small></div>`, 'gold', 3200); rain(70); sfx('ach'); }, 350); delay += 500; }
     if (e.t === 'ach') {
-      setTimeout(() => { toast(`${icon(e.a.icon)}<div><b>Ачівка · ${e.a.name}</b><small>+${e.a.coins} монет${e.item ? ` · скін «${e.item.name}»` : ''}</small></div>`, 'gold', 3800); sfx('ach'); buzz('success'); }, 500 + delay);
+      setTimeout(() => { toast(`${icon(e.a.icon)}<div><b>Ачівка · ${G.nm(e.a)}</b><small>+${e.a.coins} монет${e.item ? ` · скін «${e.item.name}»` : ''}</small></div>`, 'gold', 3800); sfx('ach'); buzz('success'); }, 500 + delay);
       delay += 900;
     }
   }
@@ -461,7 +462,7 @@ function levelUp(root, levels) {
     <div class="lvup-title">LEVEL UP!</div>
     <div class="lvup-stage">${cv(() => stage('lvup', S.eq, { w: 120, h: 96, floor: 14 }).cv)}<div class="scan"></div></div>
     <div class="lvup-num"><span>LV ${first.lv - 1}</span><i>→</i><b>LV ${last.lv}</b></div>
-    ${rk ? `<div class="lvup-rank">Новий ранг: <b>${rk.name}</b></div>` : ''}
+    ${rk ? `<div class="lvup-rank">Новий ранг: <b>${G.nm(rk)}</b></div>` : ''}
     <div class="loot-list">
       <div class="loot-row">${icon('coin')}<span>+${coins} монет</span></div>
       ${items.map(i => `<div class="loot-row rar-${i.rar}">${icon('star')}<span>${SLOTS.find(s => s.id === i.slot).name}: «${i.name}»</span><small>${RAR[i.rar]}</small></div>`).join('')}
@@ -495,6 +496,7 @@ function onboarding(root) {
     <div class="lvup-stage">${cv(() => stage('intro', S.eq, { w: 120, h: 96, floor: 14 }).cv)}<div class="scan"></div></div>
     <p>Зараз ти <b>NPC</b> у сірій футболці.<br>Закривай квести, тягай залізо, фарм XP — і персонаж еволюціонує разом із тобою.</p>
     <input class="field" id="ob-name" maxlength="20" placeholder="Як тебе звати?" value="${esc(S.name)}" autocomplete="off">
+    <div class="ob-g"><span>Як до тебе звертатись?</span><div class="chips two">${[['m', 'Він'], ['f', 'Вона']].map(([v, n]) => `<button class="chip-b ${S.profile.g === v ? 'on' : ''}" data-act="ob-g" data-v="${v}">${n}</button>`).join('')}</div></div>
     <button class="btn next big" data-act="onboard">Почати гру</button>
   </div>`;
   hydrate(root);
@@ -514,7 +516,7 @@ setInterval(() => {
   const min = new Date().getMinutes(); if (min !== seenMin) { seenMin = min; G.timeSecrets(); if (S.onboarded && !$('#overlay.open')) react({ x: innerWidth / 2, y: innerHeight / 3 }); }
   const el = $('#wk-time'); if (el && S.draft) el.textContent = clock((Date.now() - S.draft.start) / 1000);
   if (ui.rest) {
-    if (Date.now() >= ui.rest.end) { ui.rest = null; sfx('rest'); buzz('success'); toast(`${icon('clock')}<div><b>Відпочив</b><small>Наступний підхід</small></div>`); }
+    if (Date.now() >= ui.rest.end) { ui.rest = null; sfx('rest'); buzz('success'); toast(`${icon('clock')}<div><b>${G.g('Відпочив', 'Відпочила')}</b><small>Наступний підхід</small></div>`); }
     renderRest();
   }
 }, 500);
@@ -538,7 +540,7 @@ const A = {
   ver: (el, e) => { if (++ui.verTaps >= 7 && G.secret('dev')) { sfx('level'); react({ x: e.clientX, y: e.clientY }); } else if (ui.verTaps < 7) sfx('tap'); },
   'sheet-close': () => closeSheet(),
   'overlay-next': () => { sfx('tap'); nextOverlay(); render(); },
-  onboard: () => { S.name = $('#ob-name').value.trim() || S.name || 'Гравець'; S.onboarded = true; G.save(); sfx('buy'); buzz('medium'); nextOverlay(); G.timeSecrets(); react({ x: innerWidth / 2, y: innerHeight / 3 }); },
+  onboard: () => { S.name = $('#ob-name').value.trim() || S.name; S.onboarded = true; G.save(); sfx('buy'); buzz('medium'); nextOverlay(); G.timeSecrets(); react({ x: innerWidth / 2, y: innerHeight / 3 }); },
 
   'hero-tap': (el, e) => {
     stages.home?.st.jump(); G.tapHero(); sfx('tap'); buzz('light');
@@ -649,13 +651,15 @@ const A = {
     const a = ACH[el.dataset.id], on = S.ach[a.id], [cur, goal] = a.prog(S), hide = a.secret && !on;
     const item = ITEMS.find(i => i.src && i.src.ach === a.id);
     openSheet(`<div class="ach-big t-${a.tier} ${on ? 'on' : ''}"><span class="ach-i">${icon(on ? a.icon : 'lock')}</span></div>
-      <h2 class="center">${hide ? '???' : a.name}</h2><p class="center mut">${hide ? 'Секретна ачівка. Шукай сам.' : a.desc}</p>
+      <h2 class="center">${hide ? '???' : G.nm(a)}</h2><p class="center mut">${hide ? `Секретна ачівка. ${G.g('Шукай сам.', 'Шукай сама.')}` : a.desc}</p>
       ${hide ? '' : `<div class="xp-bar slim"><i style="width:${Math.min(100, (cur / goal) * 100)}%"></i></div><div class="xp-meta"><span>${fmt(Math.min(cur, goal))} / ${fmt(goal)}</span><span>${on ? 'Отримано' : ''}</span></div>`}
       <div class="loot-list"><div class="loot-row">${icon('coin')}<span>+${a.coins} монет</span></div>${item ? `<div class="loot-row rar-${item.rar}">${icon('star')}<span>Скін «${hide ? '???' : item.name}»</span><small>${RAR[item.rar]}</small></div>` : ''}</div>`);
   },
+  'ob-g': el => { G.setGender(el.dataset.v); el.parentElement.querySelectorAll('.chip-b').forEach(b => b.classList.toggle('on', b === el)); sfx('tap'); buzz('light'); },
+  'set-g': el => { G.setGender(el.dataset.v); sfx('tap'); buzz('light'); },
   'set-toggle-opt': el => { S.settings[el.dataset.k] = !S.settings[el.dataset.k]; G.save(); sfx('tap'); buzz('light'); },
   'set-rest': el => { S.settings.rest = +el.dataset.v; G.save(); },
-  'name-edit': () => openSheet(`<h2>Ім'я гравця</h2><input class="field" id="nm" maxlength="20" value="${esc(S.name)}" autocomplete="off"><div class="sheet-foot"><button class="btn solid grow" data-act="name-save">Зберегти</button></div>`),
+  'name-edit': () => openSheet(`<h2>${G.g('Ім\'я гравця', 'Ім\'я гравчині')}</h2><input class="field" id="nm" maxlength="20" value="${esc(S.name)}" autocomplete="off"><div class="sheet-foot"><button class="btn solid grow" data-act="name-save">Зберегти</button></div>`),
   'name-save': (el, e) => { S.name = $('#nm').value.trim() || S.name; G.save(); closeSheet(); G.timeSecrets(); react({ x: e.clientX, y: e.clientY }); },
   export: async () => {
     const json = G.exportSave();

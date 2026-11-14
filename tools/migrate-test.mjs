@@ -102,7 +102,22 @@ ok(c.v === 4, 'version not downgraded');
 G.completeQuest('f1'); G.flush(); s = JSON.parse(store['respawn.v1']);
 ok(s.quests.find(q => q.id === 'f1').cat === 'travel' && s.stats.travel > 7, 'unknown sphere keeps its id and XP');
 
-/* ---------- 6. new player ---------- */
+/* ---------- 6. «Він / Вона» ---------- */
+console.log('gender');
+const { RANKS, BIZ_ACTS, ACHS } = await import('../js/data.js');
+load(v2);
+ok(G.S.profile.g === null && G.nm(G.rank()) === 'Еліта' && G.nm(RANKS[3]) === 'Боєць' && G.playerName() === 'Роман', 'old account: nothing chosen → wording exactly as before');
+G.setGender('f');
+ok(G.nm(RANKS[3]) === 'Бійчиня' && G.nm(BIZ_ACTS.find(a => a.id === 'deal')) === 'Закрила угоду' && G.g('Готовий', 'Готова') === 'Готова', 'Вона → feminine ranks, actions, phrases');
+G.S.name = ''; ok(G.playerName() === 'Гравчиня', 'default name follows gender');
+G.flush(); const gs = load(JSON.parse(store['respawn.v1']));
+ok(gs.profile.g === 'f', 'choice survives save → load');
+G.setGender('x'); ok(G.S.profile.g === null, 'garbage value resets to not chosen');
+const masc = /(ець|ок|ер|ан|ник|ач|ист|ний)$/;
+ok(RANKS.every(r => !masc.test(r.name) || r.nameF || r.name === 'Фінальний бос'), 'every gendered rank has a feminine form');
+ok(ACHS.filter(a => a.nameF).length === 10, 'feminine achievement titles present', ACHS.filter(a => a.nameF).length);
+
+/* ---------- 7. new player ---------- */
 console.log('new player');
 const n = load(undefined);
 ok(Object.keys(n.stats).join() === Object.keys(CATS).join(), 'fresh stats = the 6 spheres');

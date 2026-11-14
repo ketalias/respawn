@@ -54,7 +54,7 @@ export default function moneyModule(c) {
     <div class="row2"><button class="btn solid grow" data-act="money-add" data-out="0">${icon('plus')}Дохід</button><button class="btn ghost" data-act="money-add" data-out="1">${icon('minus')}Витрата</button></div>
     <div class="tiles">${tile(short(sum.inc), 'дохід', 'cash')}${tile(short(sum.out), 'витрати')}${tile(short(sum.net), 'прибуток', 'chart')}</div>
     ${sec('Бізнес-дії', `<span class="count">сьогодні ${today}</span>`)}
-    <div class="acts">${BIZ_ACTS.map(a => { const n = G.actCount(a.id); return `<button class="act ${n ? 'on' : ''}" data-act="biz-act" data-id="${a.id}"><span class="act-i">${icon(a.icon)}</span><span class="act-t"><b>${a.name}</b><small>+${Math.round(a.xp * G.combo())} XP</small></span>${n ? `<em>×${n}</em>` : ''}</button>`; }).join('')}</div>
+    <div class="acts">${BIZ_ACTS.map(a => { const n = G.actCount(a.id); return `<button class="act ${n ? 'on' : ''}" data-act="biz-act" data-id="${a.id}"><span class="act-i">${icon(a.icon)}</span><span class="act-t"><b>${G.nm(a)}</b><small>+${Math.round(a.xp * G.combo())} XP</small></span>${n ? `<em>×${n}</em>` : ''}</button>`; }).join('')}</div>
     ${sec('Пів року')}
     <section class="card bars">${months.map(x => `<div class="bar ${x.m === G.ym() ? 'now' : ''}"><span>${x.inc ? short(x.inc) : ''}</span><i style="height:${Math.max(3, (x.inc / max) * 70)}%"></i><small>${MSHORT[+x.m.slice(5) - 1]}</small></div>`).join('')}</section>
     ${sec('Записи')}

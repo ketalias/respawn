@@ -7,15 +7,15 @@ export function levelInfo(xp) {
   return { lv, cur: rest, need: xpNeed(lv) };
 }
 
-// rank = title + automatic body evolution (build 0..3, attitude 0..2)
+// rank = title + automatic body evolution (build 0..3, attitude 0..2); nameF = form for «Вона»
 export const RANKS = [
   { lv: 1, name: 'NPC', build: 0, expr: 0 },
-  { lv: 3, name: 'Новачок', build: 0, expr: 1 },
-  { lv: 6, name: 'Гравець', build: 1, expr: 1 },
-  { lv: 10, name: 'Боєць', build: 1, expr: 2 },
-  { lv: 15, name: 'Ветеран', build: 2, expr: 2 },
+  { lv: 3, name: 'Новачок', nameF: 'Новачка', build: 0, expr: 1 },
+  { lv: 6, name: 'Гравець', nameF: 'Гравчиня', build: 1, expr: 1 },
+  { lv: 10, name: 'Боєць', nameF: 'Бійчиня', build: 1, expr: 2 },
+  { lv: 15, name: 'Ветеран', nameF: 'Ветеранка', build: 2, expr: 2 },
   { lv: 20, name: 'Еліта', build: 2, expr: 2 },
-  { lv: 30, name: 'Майстер', build: 3, expr: 2 },
+  { lv: 30, name: 'Майстер', nameF: 'Майстриня', build: 3, expr: 2 },
   { lv: 40, name: 'Легенда', build: 3, expr: 2 },
   { lv: 50, name: 'Фінальний бос', build: 3, expr: 2 },
 ];
@@ -104,11 +104,11 @@ export const BUBBLES_HURT = ['Ай.', 'Досить.', 'Я рахую кожен
 
 /* ---------- business reps: quick-log actions (cap = rewarded per day) ---------- */
 export const BIZ_ACTS = [
-  { id: 'reach', name: 'Написав ліду', xp: 5, coins: 1, cap: 20, icon: 'bolt' },
+  { id: 'reach', name: 'Написав ліду', nameF: 'Написала ліду', xp: 5, coins: 1, cap: 20, icon: 'bolt' },
   { id: 'meet', name: 'Дзвінок / зустріч', xp: 15, coins: 2, cap: 8, icon: 'user' },
   { id: 'content', name: 'Контент / пост', xp: 10, coins: 2, cap: 5, icon: 'star' },
-  { id: 'ship', name: 'Здав роботу', xp: 25, coins: 4, cap: 5, icon: 'check' },
-  { id: 'deal', name: 'Закрив угоду', xp: 60, coins: 12, cap: 5, icon: 'brief' },
+  { id: 'ship', name: 'Здав роботу', nameF: 'Здала роботу', xp: 25, coins: 4, cap: 5, icon: 'check' },
+  { id: 'deal', name: 'Закрив угоду', nameF: 'Закрила угоду', xp: 60, coins: 12, cap: 5, icon: 'brief' },
 ];
 export const CURRENCIES = ['₴', '$', '€', 'zł'];
 
@@ -298,4 +298,8 @@ export const ACHS = [
   A('s_undo', 'Туди-сюди', 'Скасувати квест 10 разів', 'back', 'b', 10, cnt('undos', 10), S1),
   A('s_coin', 'Дрібняк', 'Натрусити монетку з гаманця', 'coin', 'b', 5, cnt('s_coin', 1), S1),
 ];
+// achievement titles for «Вона» (descriptions are imperative, already neutral)
+const ACH_F = { perf7: 'Перфекціоністка', st30: 'Незламна', boss3: 'Серійна вбивця цілей', deal10: 'Закривачка', w10: 'Завсідниця', lv30: 'Майстриня',
+  shop1: 'Шопоголічка', own25: 'Колекціонерка', loot7: 'Лутерка', s_lamp: 'Електрикиня' };
+for (const a of ACHS) if (ACH_F[a.id]) a.nameF = ACH_F[a.id];
 export const ACH = Object.fromEntries(ACHS.map(a => [a.id, a]));

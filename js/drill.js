@@ -30,7 +30,7 @@ const GEN = [
 
   { attr: 'biz', min: 1, f: () => { const price = ri(2, 20) * 100, m = pick([10, 20, 25, 30, 40, 50, 60]); return [`Собівартість ${(price * (100 - m)) / 100}, ціна ${price}\nМаржа, % = ?`, m]; } },
   { attr: 'biz', min: 1, f: () => { const cost = ri(4, 30) * 20, k = pick([10, 25, 50, 75, 100, 150]); return [`Собівартість ${cost}, націнка ${k}%\nЦіна = ?`, (cost * (100 + k)) / 100]; } },
-  { attr: 'biz', min: 1, f: () => { const inv = ri(2, 20) * 100, r = pick([10, 20, 25, 50, 80, 120, 200]); return [`Вклав ${inv}, повернулось ${(inv * (100 + r)) / 100}\nROI, % = ?`, r]; } },
+  { attr: 'biz', min: 1, f: () => { const inv = ri(2, 20) * 100, r = pick([10, 20, 25, 50, 80, 120, 200]); return [`Вкладено ${inv}, повернулось ${(inv * (100 + r)) / 100}\nROI, % = ?`, r]; } },
   { attr: 'biz', min: 2, f: () => { const mu = pick([20, 25, 40, 50, 100, 125]), n = ri(20, 200); return [`Постійні витрати ${mu * n}\nмаржа з одиниці ${mu}\nБеззбитковість, шт = ?`, n]; } },
   { attr: 'biz', min: 2, f: () => { const p = pick([10, 20, 50]), s = pick([1000, 2000, 5000]); return [`${s} під ${p}% річних\n2 роки, складний відсоток\nСума = ?`, (s * (100 + p) * (100 + p)) / 10000]; } },
   { attr: 'biz', min: 1, f: () => { const cac = ri(2, 20) * 10, k = ri(3, 8); return [`CAC = ${cac}, LTV = ${cac * k}\nLTV / CAC = ?`, k]; } },

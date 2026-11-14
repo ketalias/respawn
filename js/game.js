@@ -122,6 +122,12 @@ export const rank = () => rankOf(level().lv);
 export const combo = () => comboOf(S.streak.cur);
 export const has = id => !!ITEM[id] && (ITEM[id].src === 0 || S.owned.includes(id));
 export const day = (k = today()) => (S.days[k] ||= { xp: 0, q: 0, w: 0 });
+// «Він / Вона»: profile.g = 'm' | 'f' | null (null = not chosen → masculine, exactly as before 2.0)
+export const isF = () => S.profile?.g === 'f';
+export const g = (m, f) => (isF() ? f : m);
+export const nm = o => (o && isF() && o.nameF) || o?.name; // ranks, achievements, business actions
+export const playerName = () => S.name || g('Гравець', 'Гравчиня');
+export function setGender(v) { S.profile.g = v === 'f' || v === 'm' ? v : null; save(); }
 export const isDone = q => (q.type === 'daily' ? q.doneOn === today() : !!q.doneOn);
 export function lookOf(eq = S.eq) {
   const r = rank();
