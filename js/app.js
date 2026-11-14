@@ -1,15 +1,15 @@
 // RESPAWN — screens and interaction.
 import * as G from './game.js';
 import { S, tg } from './game.js';
-import { xpNeed, rankOf, nextRank, RANKS, CATS, DIFFS, QUEST_IDEAS, BUBBLES, BUBBLES_HURT, GROUPS, SLOTS, ITEMS, ITEM, RAR, THEMES, ACHS, ACH, attrLevel, catOf, sphereOf, sphereXP } from './data.js';
+import { xpNeed, rankOf, nextRank, RANKS, CATS, DIFFS, SPHERE_QUESTS, BUBBLES, BUBBLES_HURT, GROUPS, SLOTS, ITEMS, ITEM, RAR, THEMES, ACHS, ACH, attrLevel, catOf, sphereOf, sphereXP, sphereLevel, skillLevel } from './data.js';
 import { Stage, AURA, spriteCanvas, sceneCanvas, petCanvas } from './scene.js';
 import moneyModule from './money.js';
 import mindModule, { clockLong } from './mind.js';
 import { $, esc, fmt, icon, buzz, sfx, confetti, rain, floatText, toast, openSheet, closeSheet, overlay, nextOverlay } from './ui.js';
 
 const view = $('#view'), topEl = $('#top'), tabsEl = $('#tabs'), restEl = $('#rest');
-const TABS = [['home', 'home', 'База'], ['quests', 'sword', 'Квести'], ['money', 'cash', 'Гроші'], ['skills', 'sigma', 'Скіли'], ['locker', 'shirt', 'Шафка']];
-const ui = { tab: 'home', qtab: 'daily', slot: 'top', tryOn: null, exGroup: -1, exQuery: '', qf: null, rest: null, doneOpen: false, stab: 'mind', lampOff: false, lampTaps: 0, verTaps: 0, heroTaps: 0 };
+const TABS = [['home', 'home', 'База'], ['quests', 'sword', 'Квести'], ['money', 'cash', 'Гроші'], ['spheres', 'hex', 'Сфери'], ['locker', 'shirt', 'Шафка']];
+const ui = { tab: 'home', qtab: 'daily', slot: 'top', tryOn: null, exGroup: -1, exQuery: '', qf: null, rest: null, doneOpen: false, stab: 'spheres', sphere: null, sphereBack: null, lastCat: 'dis', lampOff: false, lampTaps: 0, verTaps: 0, heroTaps: 0 };
 
 const acc = () => (THEMES[S.eq.theme] || THEMES.mono)[0];
 const ask = msg => new Promise(res => { if (tg?.showConfirm && tg.isVersionAtLeast?.('6.2')) tg.showConfirm(msg, res); else res(confirm(msg)); });
@@ -52,6 +52,8 @@ function questCard(q) {
   </div>`;
 }
 const sortQ = list => [...list].sort((a, b) => G.isDone(a) - G.isDone(b));
+// Ukrainian plural: 1 квест · 2 квести · 5 квестів
+const plural = (n, one, few, many) => (n % 10 === 1 && n % 100 !== 11 ? one : n % 10 >= 2 && n % 10 <= 4 && (n % 100 < 12 || n % 100 > 14) ? few : many);
 const sec = (title, right = '') => `<div class="sec"><h3>${title}</h3>${right}</div>`;
 const tile = (val, label, ic) => `<div class="tile"><div class="tile-v">${ic ? icon(ic) : ''}${val}</div><div class="tile-l">${label}</div></div>`;
 
@@ -118,8 +120,8 @@ function home() {
     ${tile(S.streak.cur, S.streak.cur ? 'днів стрік' : 'стрік', 'flame')}
   </div>
   ${G.lootReady() ? `<button class="card loot" data-act="loot"><span class="loot-i">${icon('chest')}</span><span class="loot-t"><b>Денний лут</b><small>Тапни, щоб відкрити скриню</small></span><span class="loot-go">${icon('play')}</span></button>` : ''}
-  ${S.draft ? `<button class="card loot live" data-act="go" data-tab="skills" data-stab="body"><span class="loot-i">${icon('dumbbell')}</span><span class="loot-t"><b>Тренування триває</b><small>Повернутися до залу</small></span><span class="loot-go">${icon('play')}</span></button>` : ''}
-  ${S.focus ? `<button class="card loot live" data-act="go" data-tab="skills" data-stab="mind"><span class="loot-i">${icon('clock')}</span><span class="loot-t"><b>Фокус-сесія йде</b><small>${esc(S.skills.find(k => k.id === S.focus.skill)?.name || '')}</small></span><span class="loot-go">${icon('play')}</span></button>` : ''}
+  ${S.draft ? `<button class="card loot live" data-act="go" data-tab="spheres" data-stab="body"><span class="loot-i">${icon('dumbbell')}</span><span class="loot-t"><b>Тренування триває</b><small>Повернутися до залу</small></span><span class="loot-go">${icon('play')}</span></button>` : ''}
+  ${S.focus ? `<button class="card loot live" data-act="go" data-tab="spheres" data-stab="mind"><span class="loot-i">${icon('clock')}</span><span class="loot-t"><b>Фокус-сесія йде</b><small>${esc(S.skills.find(k => k.id === S.focus.skill)?.name || '')}</small></span><span class="loot-go">${icon('play')}</span></button>` : ''}
 
   ${sec('Квести дня', `<button class="link" data-act="go" data-tab="quests">усі →</button>`)}
   <div class="qlist">${list.length ? list.map(questCard).join('') : `<div class="empty">${icon('star')}<b>Усе закрито</b><span>${dailies.length ? 'Ідеальний день. Додай ще квест або відпочивай.' : 'Додай свої перші квести.'}</span></div>`}</div>
@@ -146,19 +148,28 @@ function quests() {
     ${body}`;
 }
 
-function questSheet(q) {
-  const f = ui.qf = q ? { id: q.id, title: q.title, cat: sphereOf(q.cat), diff: q.diff, type: q.type } : { title: '', cat: 'dis', diff: 'm', type: ui.qtab === 'once' ? 'once' : 'daily' };
+// ready-made quests of a sphere that the player doesn't have yet → [[title, diff, type], index][]
+const freshIdeas = id => { const have = new Set(S.quests.map(q => q.title.trim().toLowerCase())); return (SPHERE_QUESTS[id] || []).map((x, i) => [x, i]).filter(([x]) => !have.has(x[0].toLowerCase())); };
+const qfSum = f => { const D = DIFFS[f.diff] || DIFFS.m; return `${f.type === 'once' ? 'Місія' : 'Щоденний'} · ${D.name} · ${D.xp} XP`; };
+const qfIdeas = f => freshIdeas(f.cat).map(([x, i]) => `<button class="chip-b sm" data-act="idea" data-s="${f.cat}" data-i="${i}">${esc(x[0])}</button>`).join('') || '<span class="note">Усі ідеї цієї сфери вже у твоїх квестах.</span>';
+function questSheet(q, cat) {
+  const f = ui.qf = q ? { id: q.id, title: q.title, cat: sphereOf(q.cat), diff: q.diff, type: q.type } : { title: '', cat: cat || ui.lastCat, diff: 'm', type: ui.qtab === 'once' ? 'once' : 'daily' };
+  ui.sphereBack = $('#sph') ? ui.sphere : null; // opened from a sphere card → go back there after saving
   openSheet(`<h2>${q ? 'Редагувати квест' : 'Новий квест'}</h2>
     <input class="field" id="qf-title" maxlength="80" placeholder="Що треба зробити?" value="${esc(f.title)}" autocomplete="off">
-    <div class="lbl">Тип</div>
-    <div class="chips" data-group="type">${[['daily', 'Щоденний'], ['once', 'Місія']].map(([v, n]) => `<button class="chip-b ${f.type === v ? 'on' : ''}" data-act="qf" data-k="type" data-v="${v}">${n}</button>`).join('')}</div>
-    <div class="lbl">Атрибут</div>
-    <div class="chips two">${Object.entries(CATS).map(([v, c]) => `<button class="chip-b ${f.cat === v ? 'on' : ''}" data-act="qf" data-k="cat" data-v="${v}">${icon(c.icon)}${c.name}</button>`).join('')}</div>
-    <div class="lbl">Складність</div>
-    <div class="chips four">${Object.entries(DIFFS).map(([v, d]) => `<button class="chip-b col d-${v} ${f.diff === v ? 'on' : ''}" data-act="qf" data-k="diff" data-v="${v}"><b>${d.name}</b><small>${d.xp} XP</small></button>`).join('')}</div>
-    ${q ? '' : `<div class="lbl">Ідеї</div><div class="chips wrap ideas">${QUEST_IDEAS.map((x, i) => `<button class="chip-b sm" data-act="idea" data-i="${i}">${x[0]}</button>`).join('')}</div>`}
+    <div class="lbl">Сфера</div>
+    <div class="chips three">${Object.entries(CATS).map(([v, c]) => `<button class="chip-b ${f.cat === v ? 'on' : ''}" data-act="qf" data-k="cat" data-v="${v}">${icon(c.icon)}${c.name}</button>`).join('')}</div>
+    ${q ? '' : `<div class="lbl">Ідеї</div><div class="chips wrap ideas" id="qf-ideas">${qfIdeas(f)}</div>`}
+    <button class="fold" data-act="qf-more">${q ? '▾' : '▸'} Більше · <span id="qf-sum">${qfSum(f)}</span></button>
+    <div id="qf-more" ${q ? '' : 'hidden'}>
+      <div class="lbl">Тип</div>
+      <div class="chips" data-group="type">${[['daily', 'Щоденний'], ['once', 'Місія']].map(([v, n]) => `<button class="chip-b ${f.type === v ? 'on' : ''}" data-act="qf" data-k="type" data-v="${v}">${n}</button>`).join('')}</div>
+      <div class="lbl">Складність</div>
+      <div class="chips four">${Object.entries(DIFFS).map(([v, d]) => `<button class="chip-b col d-${v} ${f.diff === v ? 'on' : ''}" data-act="qf" data-k="diff" data-v="${v}"><b>${d.name}</b><small>${d.xp} XP</small></button>`).join('')}</div>
+    </div>
     <div class="sheet-foot">${q ? `<button class="btn ghost danger" data-act="quest-del">${icon('trash')}</button>` : ''}<button class="btn solid grow" data-act="quest-save">${q ? 'Зберегти' : 'Додати квест'}</button></div>`);
 }
+const afterQuestSheet = () => { if (ui.sphereBack) sphereSheet(ui.sphereBack); else closeSheet(); ui.sphereBack = null; };
 
 /* ---------- GYM ---------- */
 function gym() {
@@ -348,17 +359,57 @@ function profile() {
 /* ---------- render ---------- */
 const ctx = { G, ui, icon, esc, fmt, tile, sec, openSheet, closeSheet, react, render, sfx, buzz, toast, ask, dateUA, confetti, rain, overlay, nextOverlay, $ };
 const money = moneyModule(ctx), mind = mindModule(ctx);
-function skills() {
-  return `<div class="seg2"><button class="${ui.stab === 'mind' ? 'on' : ''}" data-act="stab" data-v="mind">Розум</button><button class="${ui.stab === 'body' ? 'on' : ''}" data-act="stab" data-v="body">Тіло</button></div>
-    ${ui.stab === 'body' ? gym() : mind.view()}`;
+/* ---------- SPHERES ---------- */
+const sphereLv = id => sphereLevel(sphereXP(S.stats, id));
+const activeIn = id => S.quests.filter(q => sphereOf(q.cat) === id && (q.type === 'daily' || !q.doneOn));
+function sphereRow(id) {
+  const c = CATS[id], L = sphereLv(id), qn = activeIn(id).length, kn = S.skills.filter(k => sphereOf(k.cat) === id).length, td = G.day().s?.[id] || 0;
+  const meta = [qn ? `${qn} ${plural(qn, 'квест', 'квести', 'квестів')}` : 'квестів ще немає', kn ? `${kn} ${plural(kn, 'скіл', 'скіли', 'скілів')}` : '', td ? `+${fmt(td)} XP сьогодні` : ''].filter(Boolean).join(' · ');
+  return `<div class="skill sph-row">
+    <button class="skill-b" data-act="sphere-open" data-id="${id}">
+      <div class="skill-t"><b>${icon(c.icon)}${c.name}</b><span>LV ${L.lv}</span></div>
+      <div class="skill-bar"><i style="width:${Math.max(2, (L.cur / L.need) * 100)}%"></i></div>
+      <small>${meta}</small>
+    </button>
+    <button class="skill-go" data-act="quest-new" data-cat="${id}" aria-label="Новий квест: ${c.name}">${icon('plus')}</button>
+  </div>`;
 }
-const VIEWS = { home, quests, money: money.view, skills, locker, profile };
+function spheresHome() {
+  const ids = Object.keys(CATS), lv = Object.fromEntries(ids.map(id => [id, sphereLv(id).lv]));
+  const top = ids.reduce((a, b) => (lv[b] > lv[a] ? b : a)), low = ids.reduce((a, b) => (lv[b] < lv[a] ? b : a));
+  const pill = id => `<b>${icon(CATS[id].icon)}${CATS[id].name}<i>LV ${lv[id]}</i></b>`;
+  return `<section class="card attrs">${radar()}
+      <div class="sph-sum">${lv[top] === lv[low] ? '<div class="lbl">Баланс</div><b>Усі сфери рівні</b><small>Почни з будь-якої — XP піде у її шестикутник.</small>'
+        : `<div class="lbl">Найсильніша</div>${pill(top)}<div class="lbl">Підтягни</div>${pill(low)}`}</div>
+    </section>
+    <div class="skills">${ids.map(sphereRow).join('')}</div>
+    <p class="note">Квест, скіл, тренування чи дохід приносять XP у свою сферу. Тапни сферу — там готові квести.</p>`;
+}
+function sphereBody(id) {
+  const c = CATS[id], xp = sphereXP(S.stats, id), L = sphereLevel(xp), qs = sortQ(activeIn(id)), ks = S.skills.filter(k => sphereOf(k.cat) === id), tpl = freshIdeas(id);
+  return `<h2 class="sph-h">${icon(c.icon)}${c.name}</h2>
+    <div class="lbl">LV ${L.lv} · ${fmt(xp)} XP · до LV ${L.lv + 1}: ${fmt(L.left)} XP</div>
+    <div class="xp-bar slim"><i style="width:${Math.max(2, (L.cur / L.need) * 100)}%"></i></div>
+    ${sec('Квести', `<span class="count">${qs.length}</span>`)}
+    <div class="qlist">${qs.map(questCard).join('') || `<div class="empty"><span>Тут ще порожньо — візьми готовий квест нижче.</span></div>`}</div>
+    ${tpl.length ? `${sec('Готові квести')}<div class="chips wrap ideas">${tpl.map(([x, i]) => `<button class="chip-b sm" data-act="tpl-add" data-s="${id}" data-i="${i}">${icon('plus')}${esc(x[0])}</button>`).join('')}</div><p class="note">Тап — і квест одразу у твоєму списку.</p>` : ''}
+    ${ks.length ? `${sec('Скіли')}<div class="rows">${ks.map(k => `<div class="row static"><span class="row-t"><b>${esc(k.name)}</b><small>LV ${skillLevel(k.mins)} · ${kg(k.mins / 60)} год фокусу</small></span></div>`).join('')}</div>` : ''}
+    <div class="sheet-foot"><button class="btn solid grow" data-act="quest-new" data-cat="${id}">${icon('plus')}Свій квест</button></div>`;
+}
+function sphereSheet(id) { ui.sphere = id; openSheet(`<div id="sph">${sphereBody(id)}</div>`); }
+function spheres() {
+  const seg = [['spheres', 'Сфери'], ['mind', 'Фокус'], ['body', 'Зал']];
+  return `<div class="seg2 three">${seg.map(([v, n]) => `<button class="${ui.stab === v ? 'on' : ''}" data-act="stab" data-v="${v}">${n}</button>`).join('')}</div>
+    ${ui.stab === 'body' ? gym() : ui.stab === 'mind' ? mind.view() : spheresHome()}`;
+}
+const VIEWS = { home, quests, money: money.view, spheres, locker, profile };
 function render() {
   applyTheme(); cvReg = {};
   renderTop(); renderTabs();
   view.dataset.tab = ui.tab;
-  view.innerHTML = VIEWS[ui.tab]();
+  view.innerHTML = (VIEWS[ui.tab] || VIEWS.home)();
   hydrate(view);
+  const sph = $('#sph'); if (sph && ui.sphere) sph.innerHTML = sphereBody(ui.sphere); // open sphere card follows the game state
   renderRest();
 }
 let enterTimer = null;
@@ -510,18 +561,30 @@ const A = {
     if (G.isDone(q)) { G.undoQuest(q.id); sfx('undo'); buzz('light'); G.drain(); }
     else { G.completeQuest(q.id); sfx('done'); buzz('medium'); react(pt); }
   },
-  'quest-new': () => questSheet(null),
+  'quest-new': el => { sfx('tap'); questSheet(null, el?.dataset?.cat); },
   'quest-edit': el => questSheet(S.quests.find(q => q.id === el.dataset.id)),
-  qf: el => { ui.qf[el.dataset.k] = el.dataset.v; el.parentElement.querySelectorAll('.chip-b').forEach(b => b.classList.toggle('on', b === el)); sfx('tap'); },
-  idea: el => { const [title, cat, diff] = QUEST_IDEAS[el.dataset.i]; Object.assign(ui.qf, { title, cat, diff }); refreshQuestForm(); sfx('tap'); },
+  qf: el => {
+    ui.qf[el.dataset.k] = el.dataset.v; el.parentElement.querySelectorAll('.chip-b').forEach(b => b.classList.toggle('on', b === el)); sfx('tap');
+    if (el.dataset.k === 'cat' && $('#qf-ideas')) { ui.qf.title = $('#qf-title').value; $('#qf-ideas').innerHTML = qfIdeas(ui.qf); }
+    $('#qf-sum').textContent = qfSum(ui.qf);
+  },
+  'qf-more': el => { const box = $('#qf-more'); box.hidden = !box.hidden; el.firstChild.textContent = box.hidden ? '▸ Більше · ' : '▾ Більше · '; sfx('tap'); },
+  idea: el => { const [title, diff, type = 'daily'] = SPHERE_QUESTS[el.dataset.s][+el.dataset.i]; Object.assign(ui.qf, { title, cat: el.dataset.s, diff, type }); refreshQuestForm(); sfx('tap'); },
+  'sphere-open': el => { sfx('tap'); buzz('light'); sphereSheet(el.dataset.id); },
+  'tpl-add': el => {
+    const [title, diff, type = 'daily'] = SPHERE_QUESTS[el.dataset.s][+el.dataset.i];
+    G.addQuest({ title, cat: el.dataset.s, diff, type }); sfx('buy'); buzz('light');
+    toast(`${icon('plus')}<div><b>${esc(title)}</b><small>Додано в ${type === 'once' ? 'місії' : 'щоденні'}</small></div>`);
+  },
   'quest-save': () => {
     const title = $('#qf-title').value.trim();
     if (!title) { $('#qf-title').classList.add('shake'); setTimeout(() => $('#qf-title')?.classList.remove('shake'), 400); sfx('err'); return; }
     const f = { ...ui.qf, title };
     if (f.id) G.editQuest(f.id, { title, cat: f.cat, diff: f.diff, type: f.type }); else { G.addQuest(f); ui.qtab = f.type; }
-    sfx('buy'); buzz('light'); closeSheet(); render();
+    ui.lastCat = f.cat;
+    sfx('buy'); buzz('light'); afterQuestSheet(); render();
   },
-  'quest-del': async () => { if (await ask('Видалити квест?')) { G.deleteQuest(ui.qf.id); closeSheet(); } },
+  'quest-del': async () => { if (await ask('Видалити квест?')) { G.deleteQuest(ui.qf.id); afterQuestSheet(); } },
   qtab: el => { ui.qtab = el.dataset.v; sfx('tap'); render(); },
   'done-toggle': () => { ui.doneOpen = !ui.doneOpen; render(); },
 
@@ -606,6 +669,8 @@ const A = {
 function refreshQuestForm() {
   const f = ui.qf; $('#qf-title').value = f.title;
   document.querySelectorAll('#sheet [data-act="qf"]').forEach(b => b.classList.toggle('on', f[b.dataset.k] === b.dataset.v));
+  if ($('#qf-ideas')) $('#qf-ideas').innerHTML = qfIdeas(f);
+  $('#qf-sum').textContent = qfSum(f);
 }
 
 Object.assign(A, money.actions, mind.actions);

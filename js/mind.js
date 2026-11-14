@@ -39,7 +39,7 @@ export default function mindModule(c) {
     ${sec('Скіли', `<span class="count">${hrs(s.counters.focusMin)} год фокусу</span>`)}
     <div class="skills">${s.skills.map(skillRow).join('') || `<div class="empty">${icon('sigma')}<b>Скілів немає</b><span>Додай те, що реально качаєш.</span></div>`}</div>
     <button class="btn dashed" data-act="skill-new">${icon('plus')}Новий скіл</button>
-    <p class="note">▶ запускає таймер фокусу. Хвилина фокусу = 1 XP у гілку скіла.</p>`;
+    <p class="note">▶ запускає таймер фокусу. Хвилина фокусу = 1 XP у сферу скіла.</p>`;
   }
 
   /* ---------- warm-up mini-game ---------- */
@@ -141,8 +141,8 @@ export default function mindModule(c) {
     'skill-new': () => {
       form.cat = 'mind';
       openSheet(`<h2>Новий скіл</h2><input class="field" id="sk-name" maxlength="40" placeholder="Наприклад, лінійна алгебра" autocomplete="off">
-        <div class="lbl">Гілка</div>
-        <div class="chips">${SKILL_CATS.map(v => `<button class="chip-b ${v === form.cat ? 'on' : ''}" data-act="skill-cat" data-v="${v}">${icon(CATS[v].icon)}${CATS[v].name}</button>`).join('')}</div>
+        <div class="lbl">Сфера</div>
+        <div class="chips three">${SKILL_CATS.map(v => `<button class="chip-b ${v === form.cat ? 'on' : ''}" data-act="skill-cat" data-v="${v}">${icon(CATS[v].icon)}${CATS[v].name}</button>`).join('')}</div>
         <div class="sheet-foot"><button class="btn solid grow" data-act="skill-save">Додати</button></div>`);
     },
     'skill-cat': el => { form.cat = el.dataset.v; el.parentElement.querySelectorAll('.chip-b').forEach(b => b.classList.toggle('on', b === el)); },

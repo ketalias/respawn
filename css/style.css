@@ -394,3 +394,14 @@ select.field { appearance: none; -webkit-appearance: none; }
 
 @media (max-width: 359px) { .tile-v { font-size: 11px; } .lvbig { font-size: 20px; } .items { gap: 6px; } .attrs { grid-template-columns: 120px 1fr; } }
 @media (prefers-reduced-motion: reduce) { *, *::before, *::after { animation-duration: .01ms !important; animation-iteration-count: 1 !important; transition-duration: .01ms !important; } }
+
+/* ---------- spheres (2.0) ---------- */
+.seg2.three { grid-template-columns: repeat(3, 1fr); }
+.chips.three { display: grid; grid-template-columns: repeat(3, 1fr); } .chips.three .chip-b { padding: 0 6px; gap: 6px; }
+.sph-row .skill-t b { display: flex; align-items: center; gap: 9px; } .sph-row .skill-t b .ico { width: 14px; height: 14px; color: var(--acc); }
+.sph-sum { display: flex; flex-direction: column; gap: 4px; min-width: 0; } .sph-sum .lbl { margin-top: 6px; } .sph-sum .lbl:first-child { margin-top: 0; }
+.sph-sum b { display: flex; align-items: center; gap: 8px; font-weight: 500; font-size: 14px; } .sph-sum b .ico { width: 14px; height: 14px; color: var(--acc); }
+.sph-sum b i { margin-left: auto; font: normal 400 8px var(--px); color: var(--acc); } .sph-sum small { font-size: 11.5px; color: var(--mut); line-height: 1.4; }
+#sph { display: contents; }
+.sph-h { display: flex; align-items: center; gap: 12px; } .sph-h .ico { width: 26px; height: 26px; color: var(--acc); }
+#qf-more { display: flex; flex-direction: column; gap: 10px; } #qf-more[hidden] { display: none; }
