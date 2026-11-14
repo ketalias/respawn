@@ -8,8 +8,8 @@ import mindModule, { clockLong } from './mind.js';
 import { $, esc, fmt, icon, buzz, sfx, confetti, rain, floatText, toast, openSheet, closeSheet, overlay, nextOverlay } from './ui.js';
 
 const view = $('#view'), topEl = $('#top'), tabsEl = $('#tabs'), restEl = $('#rest');
-// 4 tabs; the 5th place is kept for «Друзі». Money / focus / gym live inside «Сфери».
-const TABS = [['home', 'home', 'База'], ['quests', 'sword', 'Квести'], ['spheres', 'hex', 'Сфери'], ['locker', 'shirt', 'Шафка']];
+// Money / focus / gym live inside «Сфери». «Друзі» will go inside «Профіль» (or replace it as a tab) when they exist.
+const TABS = [['home', 'home', 'База'], ['quests', 'sword', 'Квести'], ['spheres', 'hex', 'Сфери'], ['locker', 'shirt', 'Шафка'], ['profile', 'user', 'Профіль']];
 const ui = { tab: 'home', qtab: 'daily', slot: 'top', tryOn: null, exGroup: -1, exQuery: '', qf: null, rest: null, doneOpen: false, stab: 'spheres', sphere: null, sphereBack: null, lastCat: 'dis', lampOff: false, lampTaps: 0, verTaps: 0, heroTaps: 0 };
 
 const acc = () => (THEMES[S.eq.theme] || THEMES.mono)[0];
@@ -267,19 +267,21 @@ function locker() {
   const slot = SLOTS.find(s => s.id === ui.slot), t = ui.tryOn && ITEM[ui.tryOn];
   const eq = t ? { ...S.eq, [t.slot]: t.key } : S.eq;
   const st = t && itemState(t);
-  const items = ITEMS.filter(i => i.slot === ui.slot);
+  // own stuff first, then what you can buy now, then level / sphere / achievement unlocks (each by how soon)
+  const ord = it => { const s = itemState(it); return s.owned ? [0, 0] : s.price ? [1, s.price] : s.lv ? [2, s.lv] : s.sp ? [3, s.at] : [4, 0]; };
+  const items = ITEMS.filter(i => i.slot === ui.slot).map((it, n) => [it, ord(it), n]).sort(([, a, i], [, b, j]) => a[0] - b[0] || a[1] - b[1] || i - j).map(([it]) => it);
   const r = G.rank(), ownedN = ITEMS.filter(i => G.has(i.id)).length;
-  return `<section class="locker">
+  return `<div class="locker-top"><section class="locker">
       <div class="locker-in ${ui.lampOff ? 'dark' : ''}">
         <button class="lamp" data-act="lamp" aria-label="Лампа"></button>
-        ${cv(() => stage('locker', eq, { w: 96, h: 100, floor: 14 }).cv)}
+        ${cv(() => stage('locker', eq, { w: 112, h: 84, floor: 12 }).cv)}
         <div class="scan"></div>
       </div>
       <div class="locker-door">
         <div class="sticker big">${two(G.level().lv)}<small>LV</small></div>
         <div class="sticker tape">${G.nm(r)}</div>
         <div class="sticker dark">${ownedN}/${ITEMS.length}<small>скінів</small></div>
-        <div class="vents"><i></i><i></i><i></i><i></i></div>
+        <div class="vents"><i></i><i></i><i></i></div>
       </div>
     </section>
     ${t ? `<div class="tryon rar-${t.rar}">
@@ -288,7 +290,7 @@ function locker() {
           : `<span class="tryon-lock">${icon('lock')}${st.sp ? `Сфера «${CATS[st.sp].name}» LV ${st.at}` : st.lv ? `Відкриється на LV ${st.lv}` : `Ачівка «${st.ach.secret && !S.ach[st.ach.id] ? '???' : st.ach.name}»`}</span>`}
         <button class="icon-b" data-act="tryon-clear" aria-label="Зняти">${icon('x')}</button>
       </div>` : ''}
-    <div class="chips scroll slots">${SLOTS.map(s => `<button class="chip-b sm ${s.id === ui.slot ? 'on' : ''}" data-act="slot" data-v="${s.id}">${s.name}</button>`).join('')}</div>
+    <div class="chips scroll slots">${SLOTS.map(s => `<button class="chip-b sm ${s.id === ui.slot ? 'on' : ''}" data-act="slot" data-v="${s.id}">${s.name}</button>`).join('')}</div></div>
     <div class="items">
       ${slot.opt ? `<button class="item ${!S.eq[slot.id] && !t ? 'on' : ''}" data-act="item-none"><span class="th none">${icon('x')}</span><b>Нічого</b><small>зняти</small></button>` : ''}
       ${items.map(it => {
@@ -363,7 +365,7 @@ function profile() {
       <div class="kv"><span>Звук</span><button class="sw ${S.settings.sound ? 'on' : ''}" data-act="set-toggle-opt" data-k="sound" aria-label="Звук"><i></i></button></div>
       <div class="kv"><span>Вібрація</span><button class="sw ${S.settings.haptics ? 'on' : ''}" data-act="set-toggle-opt" data-k="haptics" aria-label="Вібрація"><i></i></button></div>
       ${S.mods.gym ? `<div class="kv"><span>Відпочинок між підходами</span><div class="chips">${[0, 60, 90, 120, 180].map(v => `<button class="chip-b sm ${S.settings.rest === v ? 'on' : ''}" data-act="set-rest" data-v="${v}">${v ? v + 'с' : 'вимк'}</button>`).join('')}</div></div>` : ''}
-      <div class="kv col"><span>Збереження${tg ? ' · синхронізується з Telegram' : ' · на цьому пристрої'}</span><div class="chips"><button class="chip-b sm" data-act="export">Експорт</button><button class="chip-b sm" data-act="import">Імпорт</button><button class="chip-b sm danger" data-act="reset">Скинути все</button></div></div>
+      <div class="kv col"><span>Збереження${tg ? ' · синхронізується з Telegram' : ' · на цьому пристрої'}</span><div class="chips"><button class="chip-b sm" data-act="export">Експорт</button><button class="chip-b sm" data-act="import">Імпорт</button><button class="chip-b sm danger" data-act="reset">Почати з нуля</button></div></div>
     </section>
     <p class="note center"><button data-act="ver">RESPAWN · v2.0</button></p>`;
 }
@@ -679,11 +681,11 @@ const A = {
       <div class="rows">${h.slice().reverse().slice(0, 8).map(x => `<div class="row static"><span class="row-t"><b>${setLabel(ex.type, x.top[0], x.top[1])}</b><small>${dateUA(x.d)}</small></span></div>`).join('')}</div>`);
   },
 
-  slot: el => { ui.slot = el.dataset.v; ui.tryOn = null; sfx('tap'); render(); },
+  slot: el => { ui.slot = el.dataset.v; ui.tryOn = null; sfx('tap'); render(); view.scrollTop = 0; el = $(`.slots [data-v="${ui.slot}"]`); el?.scrollIntoView({ inline: 'nearest', block: 'nearest' }); },
   item: el => {
     const it = ITEM[el.dataset.id];
     if (G.has(it.id)) { ui.tryOn = null; G.equip(it.slot, it.key); sfx('done'); buzz('light'); stages.locker?.st.jump(); }
-    else { ui.tryOn = it.id; sfx('tap'); buzz('light'); render(); view.scrollTop = 0; }
+    else { ui.tryOn = it.id; sfx('tap'); buzz('light'); render(); } // preview is sticky, so the list keeps its place
   },
   'look-save': el => { G.saveLook(+el.dataset.i); sfx('buy'); buzz('light'); toast(`${icon('shirt')}<div><b>Образ ${+el.dataset.i + 1} збережено</b><small>Тап по ньому — і він на тобі</small></div>`); },
   'look-wear': el => { if (G.wearLook(+el.dataset.i)) { sfx('done'); buzz('light'); stages.locker?.st.jump(); } },
@@ -720,7 +722,11 @@ const A = {
   },
   import: () => openSheet(`<h2>Імпорт</h2><p class="mut">Встав текст збереження. Поточний прогрес буде замінено.</p><textarea class="field area" id="imp" placeholder="{…}"></textarea><div class="sheet-foot"><button class="btn solid grow" data-act="import-go">Завантажити</button></div>`),
   'import-go': () => { try { G.importSave($('#imp').value); closeSheet(); toast(`${icon('check')}<div><b>Готово</b><small>Збереження завантажено</small></div>`); } catch { sfx('err'); toast(`${icon('x')}<div><b>Не вийшло</b><small>Це не схоже на збереження RESPAWN</small></div>`); } },
-  reset: async () => { if (await ask('Скинути ВЕСЬ прогрес? Це не можна скасувати.')) { G.resetAll(); ui.tab = 'home'; render(); } },
+  reset: async () => {
+    if (!(await ask('Почати з нуля? Увесь прогрес, квести й скіни буде видалено. Скасувати це не можна.'))) return;
+    G.resetAll(); Object.assign(ui, { tab: 'home', stab: 'spheres', qtab: 'daily', slot: 'top', tryOn: null, sphere: null }); Object.assign(OB, { step: 0, q: null });
+    closeSheet(); render(); view.scrollTop = 0; overlay(onboarding);
+  },
 };
 function refreshQuestForm() {
   const f = ui.qf; $('#qf-title').value = f.title;

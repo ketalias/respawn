@@ -116,7 +116,7 @@ export function importSave(json) {
   if (!raw || typeof raw.xp !== 'number' || !Array.isArray(raw.quests)) throw new Error('bad save');
   S = hydrate(raw); rollDay(); unlockSpheres(null, true); save();
 }
-export function resetAll() { const name = S.name; S = fresh(); S.name = name; lastChunks = []; save(); }
+export function resetAll() { const name = S.name; S = fresh(); S.name = name; lastChunks = []; save(); flush(); writeCloud(); } // written at once, so an old cloud copy can't come back
 
 /* ---------- derived ---------- */
 export const level = () => levelInfo(S.xp);
