@@ -24,16 +24,23 @@ export const nextRank = lv => RANKS.find(r => r.lv > lv) || null;
 
 export const comboOf = streak => (streak >= 30 ? 2 : streak >= 14 ? 1.5 : streak >= 7 ? 1.25 : streak >= 3 ? 1.1 : 1);
 
+// 6 fixed spheres, the same for everyone (order = hexagon on the radar). Ids are stable forever.
 export const CATS = {
-  biz: { name: 'Гроші', attr: 'ГРОШІ', icon: 'cash' },
-  math: { name: 'Математика', attr: 'МАТЕМ', icon: 'sigma' },
-  eng: { name: 'Інженерія', attr: 'ІНЖЕНЕР', icon: 'gear' },
-  dis: { name: 'Дисципліна', attr: 'ВОЛЯ', icon: 'target' },
   body: { name: 'Тіло', attr: 'ТІЛО', icon: 'heart' },
+  mind: { name: 'Розум', attr: 'РОЗУМ', icon: 'book' },
+  biz: { name: 'Гроші', attr: 'ГРОШІ', icon: 'cash' },
+  calm: { name: 'Спокій', attr: 'СПОКІЙ', icon: 'moon' },
+  people: { name: 'Люди', attr: 'ЛЮДИ', icon: 'user' },
+  dis: { name: 'Порядок', attr: 'ПОРЯДОК', icon: 'target' },
 };
-export const OLD_CATS = { str: 'body', vit: 'body', int: 'math' }; // saves from v1
-// category from a newer version this build doesn't know yet → neutral fallback instead of a crash
-export const catOf = k => CATS[k] || { name: 'Інше', attr: 'ІНШЕ', icon: 'star' };
+export const OLD_CATS = { str: 'body', vit: 'body', int: 'math' }; // saves from v1 (folded in hydrate)
+// categories from v2 saves → sphere they belong to. Saves are never rewritten, only read through this.
+export const ALIAS = { math: 'mind', eng: 'mind' };
+export const sphereOf = k => (CATS[k] ? k : ALIAS[k] || k);
+// sphere XP = its own key + every legacy key that points at it
+export const sphereXP = (stats, id) => Object.entries(stats || {}).reduce((a, [k, v]) => a + (sphereOf(k) === id ? +v || 0 : 0), 0);
+// unknown category (e.g. from a newer version) → neutral fallback instead of a crash
+export const catOf = k => CATS[sphereOf(k)] || { name: 'Інше', attr: 'ІНШЕ', icon: 'star' };
 export const attrLevel = xp => Math.floor(Math.sqrt(Math.max(0, xp) / 25)) + 1;
 
 export const DIFFS = {
@@ -45,8 +52,8 @@ export const DIFFS = {
 
 export const STARTER_QUESTS = [
   ['Одна дія, що приносить гроші', 'biz', 'h', 'daily'],
-  ['Розв\'язати 3 задачі з математики', 'math', 'm', 'daily'],
-  ['Година інженерної практики', 'eng', 'h', 'daily'],
+  ['Розв\'язати 3 задачі з математики', 'mind', 'm', 'daily'],
+  ['Година інженерної практики', 'mind', 'h', 'daily'],
   ['Записати доходи й витрати дня', 'biz', 'e', 'daily'],
   ['Рух: тренування або 30 хв ходьби', 'body', 'm', 'daily'],
   ['Поставити ціль доходу на місяць', 'biz', 'm', 'once'],
@@ -54,8 +61,8 @@ export const STARTER_QUESTS = [
 ];
 export const QUEST_IDEAS = [
   ['Написати 5 потенційним клієнтам', 'biz', 'm'], ['Виставити рахунок', 'biz', 'e'], ['Розібрати фінанси за тиждень', 'biz', 'm'], ['Підняти ціну', 'biz', 'h'],
-  ['Запустити новий оффер', 'biz', 'x'], ['Розділ підручника з конспектом', 'math', 'h'], ['10 задач на ймовірність', 'math', 'm'], ['Розібрати доведення теореми', 'math', 'h'],
-  ['Закомітити фічу', 'eng', 'm'], ['30 хв документації', 'eng', 'e'], ['Розібрати чужий код чи схему', 'eng', 'm'], ['Довести пет-проєкт до релізу', 'eng', 'x'],
+  ['Запустити новий оффер', 'biz', 'x'], ['Розділ підручника з конспектом', 'mind', 'h'], ['10 задач на ймовірність', 'mind', 'm'], ['Розібрати доведення теореми', 'mind', 'h'],
+  ['Закомітити фічу', 'mind', 'm'], ['30 хв документації', 'mind', 'e'], ['Розібрати чужий код чи схему', 'mind', 'm'], ['Довести пет-проєкт до релізу', 'mind', 'x'],
   ['Глибока робота 2 год', 'dis', 'h'], ['Лягти до 23:00', 'dis', 'm'], ['8 годин сну', 'body', 'm'], ['10 000 кроків', 'body', 'm'],
 ];
 
@@ -81,8 +88,8 @@ export const CURRENCIES = ['₴', '$', '€', 'zł'];
 const SK_H = [0, 1, 3, 6, 10, 15, 25, 40, 60, 90, 130, 180, 250, 350, 500, 750, 1000];
 export const skillLevel = mins => { const h = mins / 60; let l = 0; for (const t of SK_H) if (h >= t) l++; return l; };
 export const skillSpan = mins => { const l = skillLevel(mins); return SK_H[l] === undefined ? null : [SK_H[l - 1], SK_H[l]]; };
-export const DEFAULT_SKILLS = [['Математика: задачі й теорія', 'math'], ['Програмування', 'eng'], ['Фінанси та продажі', 'biz']];
-export const SKILL_CATS = ['math', 'eng', 'biz'];
+export const DEFAULT_SKILLS = [['Математика: задачі й теорія', 'mind'], ['Програмування', 'mind'], ['Фінанси та продажі', 'biz']];
+export const SKILL_CATS = Object.keys(CATS);
 
 /* ---------- exercises: type w = вага×повтори, bw = власна вага, t = хвилини ---------- */
 export const GROUPS = ['Груди', 'Спина', 'Ноги', 'Плечі', 'Руки', 'Прес', 'Кардіо'];
@@ -187,7 +194,7 @@ export const DEFAULT_EQ = {
 /* ---------- achievements: prog(state) -> [current, goal] ---------- */
 const A = (id, name, desc, icon, tier, coins, prog, extra = {}) => ({ id, name, desc, icon, tier, coins, prog, ...extra });
 const cnt = (k, n) => s => [s.counters[k] || 0, n];
-const catHours = cat => s => Math.floor(s.skills.filter(k => k.cat === cat).reduce((a, k) => a + k.mins, 0) / 60);
+const sphereHours = id => s => Math.floor(s.skills.filter(k => sphereOf(k.cat) === id).reduce((a, k) => a + k.mins, 0) / 60);
 const S1 = { secret: true };
 export const ACHS = [
   // ритм
@@ -222,11 +229,11 @@ export const ACHS = [
   A('dr1000', 'Тисяча', '1000 правильних відповідей у розминках', 'sigma', 'g', 250, cnt('drillOk', 1000)),
   A('drp5', 'Без помилок', '5 ідеальних розминок', 'star', 's', 80, cnt('drillPerfect', 5)),
   A('fast', 'Людина-калькулятор', 'Правильна відповідь швидше ніж за 2 секунди', 'bolt', 's', 40, cnt('drillFast', 1)),
-  A('mathh10', 'Десять годин математики', '10 годин фокусу на математиці', 'clock', 's', 80, s => [catHours('math')(s), 10]),
+  A('mathh10', 'Десять годин Розуму', '10 годин фокусу на скілах Розуму', 'clock', 's', 80, s => [sphereHours('mind')(s), 10]),
   // інженерія та фокус
   A('f1', 'Метод гумової качки', 'Заверши першу фокус-сесію', 'clock', 'b', 15, cnt('sessions', 1)),
   A('f90', 'Глибоке занурення', 'Фокус-сесія на 90+ хвилин', 'clock', 's', 60, cnt('deep', 1)),
-  A('engh10', 'Десять годин інженерії', '10 годин фокусу на інженерії', 'gear', 's', 80, s => [catHours('eng')(s), 10]),
+  A('engh10', 'П\'ятдесят годин Розуму', '50 годин фокусу на скілах Розуму', 'gear', 's', 80, s => [sphereHours('mind')(s), 50]),
   A('h100', 'Сто годин', '100 годин фокусу сумарно', 'gear', 'g', 300, s => [Math.floor((s.counters.focusMin || 0) / 60), 100]),
   A('sk5', 'Стек', 'Прокачай 3 скіли до 5 рівня', 'sigma', 'g', 150, s => [s.skills.filter(k => skillLevel(k.mins) >= 5).length, 3]),
   // тіло
@@ -247,7 +254,7 @@ export const ACHS = [
   A('own25', 'Колекціонер', 'Збери 25 куплених чи здобутих скінів', 'shirt', 's', 80, s => [s.owned.length, 25]),
   A('rich', 'Скрудж', 'Накопич 500 монет', 'coin', 's', 50, s => [Math.min(500, s.counters.maxCoins || 0), 500]),
   A('loot7', 'Лутер', 'Забери денний лут 7 разів', 'chest', 'b', 30, cnt('loot', 7)),
-  A('attr5', 'Гармонія', 'Усі атрибути 5 рівня', 'heart', 'g', 120, s => [Math.min(...Object.keys(CATS).map(k => attrLevel(s.stats[k] || 0))), 5]),
+  A('attr5', 'Гармонія', 'Усі 6 сфер 5 рівня', 'heart', 'g', 120, s => [Math.min(...Object.keys(CATS).map(k => attrLevel(sphereXP(s.stats, k)))), 5]),
   // секрети — умови приховані, поки не знайдеш
   A('tap', 'Не чіпай мене', 'Тапнути персонажа 50 разів', 'skull', 's', 30, cnt('taps', 50), S1),
   A('s_leet', 'L33T', 'Записати суму 1337', 'gear', 's', 37, cnt('s_leet', 1), S1),

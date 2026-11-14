@@ -1,5 +1,5 @@
 // RESPAWN — skills screen: focus sessions per skill + daily brain warm-up mini-game.
-import { CATS, SKILL_CATS, skillLevel, skillSpan, attrLevel, catOf } from './data.js';
+import { CATS, SKILL_CATS, skillLevel, skillSpan, attrLevel, catOf, sphereXP } from './data.js';
 import { makeRun, drillTier } from './drill.js';
 
 const hrs = mins => (Math.round((mins / 60) * 10) / 10).toString().replace('.', ',');
@@ -11,7 +11,7 @@ export const clockLong = sec => {
 export default function mindModule(c) {
   const { G, icon, esc, sec, openSheet, closeSheet, react, sfx, buzz, toast, ask, confetti, rain, overlay, nextOverlay, $ } = c;
   const S = () => G.S;
-  let form = { cat: 'math', id: null }, run = null;
+  let form = { cat: 'mind', id: null }, run = null;
 
   function skillRow(k) {
     const lv = skillLevel(k.mins), span = skillSpan(k.mins), h = k.mins / 60;
@@ -92,7 +92,7 @@ export default function mindModule(c) {
 
   const actions = {
     'drill-start': () => {
-      const tier = drillTier(attrLevel(S().stats.math));
+      const tier = drillTier(attrLevel(sphereXP(S().stats, 'mind')));
       run = { qs: makeRun(tier), i: 0, input: '', results: [], root: null };
       sfx('buy'); buzz('medium');
       overlay(root => { run.root = root; drawQ(); });
@@ -139,7 +139,7 @@ export default function mindModule(c) {
     },
     'skill-del': async () => { if (await ask('Видалити скіл разом із годинами? XP залишиться.')) { G.deleteSkill(form.id); closeSheet(); } },
     'skill-new': () => {
-      form.cat = 'eng';
+      form.cat = 'mind';
       openSheet(`<h2>Новий скіл</h2><input class="field" id="sk-name" maxlength="40" placeholder="Наприклад, лінійна алгебра" autocomplete="off">
         <div class="lbl">Гілка</div>
         <div class="chips">${SKILL_CATS.map(v => `<button class="chip-b ${v === form.cat ? 'on' : ''}" data-act="skill-cat" data-v="${v}">${icon(CATS[v].icon)}${CATS[v].name}</button>`).join('')}</div>

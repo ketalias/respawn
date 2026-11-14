@@ -1,7 +1,8 @@
 // RESPAWN — state, persistence (localStorage + Telegram CloudStorage) and game rules.
-import { levelInfo, rankOf, comboOf, DIFFS, STARTER_QUESTS, EXERCISES, GROUPS, ITEMS, ITEM, DEFAULT_EQ, ACHS, CATS, OLD_CATS, BIZ_ACTS, DEFAULT_SKILLS } from './data.js';
+import { levelInfo, rankOf, comboOf, DIFFS, STARTER_QUESTS, EXERCISES, GROUPS, ITEMS, ITEM, DEFAULT_EQ, ACHS, CATS, OLD_CATS, ALIAS, sphereOf, BIZ_ACTS, DEFAULT_SKILLS } from './data.js';
 
 const KEY = 'respawn.v1';
+const BAK = KEY + '.bak2'; // one-time copy of the pre-2.0 save, taken before this version first touches it
 export const tg = window.Telegram?.WebApp?.initData ? window.Telegram.WebApp : null;
 
 const pad = n => String(n).padStart(2, '0');
@@ -17,7 +18,7 @@ const COUNTERS = ['quests', 'epics', 'perfect', 'crit', 'undos', 'workouts', 'pr
 
 function fresh() {
   return {
-    v: 2, updatedAt: 0, createdAt: today(), name: '', xp: 0, coins: 0, maxLv: 1,
+    v: 3, updatedAt: 0, createdAt: today(), name: '', xp: 0, coins: 0, maxLv: 1,
     stats: Object.fromEntries(Object.keys(CATS).map(k => [k, 0])),
     quests: STARTER_QUESTS.map(([title, cat, diff, type]) => ({ id: uid(), title, cat, diff, type, doneOn: null, streak: 0, last: null })),
     days: {}, streak: { cur: 0, best: 0, last: null },
@@ -29,13 +30,18 @@ function fresh() {
     owned: [], eq: { ...DEFAULT_EQ }, manual: {}, ach: {},
     counters: Object.fromEntries(COUNTERS.map(k => [k, 0])),
     lootOn: null, coinOn: null, settings: { sound: true, haptics: true, rest: 90 },
+    // v3 (2.0)
+    profile: { g: null },                                   // 'm' | 'f'; null = not chosen yet → current (masculine) wording
+    mods: { money: true, gym: true, focus: true, drill: true, home: ['money', 'drill'] }, // optional modules + cards pinned on Base
+    privacy: { card: 'friends', spheres: true, heat: true, money: false, quests: false },  // used once friends exist
+    looks: [],                                              // saved outfits: { name, eq }
   };
 }
 function hydrate(raw) {
   const f = fresh();
   if (!raw || typeof raw !== 'object') return f;
   const s = { ...f, ...raw };
-  for (const k of ['streak', 'eq', 'counters', 'settings', 'money', 'acts', 'drill']) s[k] = { ...f[k], ...(raw[k] || {}) };
+  for (const k of ['streak', 'eq', 'counters', 'settings', 'money', 'acts', 'drill', 'profile', 'mods', 'privacy']) s[k] = { ...f[k], ...(raw[k] || {}) };
   // v1 saves had str/int/dis/vit — fold them into the new attributes.
   // Keys and categories from newer versions are kept as-is: never dropped, never remapped.
   const old = raw.stats || {};
@@ -43,7 +49,9 @@ function hydrate(raw) {
   for (const [k, v] of Object.entries(old)) { const to = OLD_CATS[k] || k; s.stats[to] = (s.stats[to] || 0) + (+v || 0); }
   for (const q of s.quests) if (OLD_CATS[q.cat]) q.cat = OLD_CATS[q.cat]; else if (!q.cat) q.cat = 'dis';
   if (!Array.isArray(s.skills)) s.skills = f.skills;
-  s.v = Math.max(2, +raw.v || 0);
+  if (!Array.isArray(s.looks)) s.looks = [];
+  // v2 → v3 is additive only: new fields come from fresh(); quests/stats keep their old category ids (read via ALIAS)
+  s.v = Math.max(3, +raw.v || 0);
   return s;
 }
 
@@ -74,9 +82,13 @@ export function save(silent) {
   if (!silent) notify();
 }
 export function flush() { clearTimeout(saveTimer); writeLocal(); }
+function backupOnce(json, raw) {
+  if (!json || !raw || (+raw.v || 0) >= 3 || !(raw.xp || raw.quests?.length)) return;
+  try { if (!localStorage.getItem(BAK)) localStorage.setItem(BAK, json); } catch { /* storage may be blocked */ }
+}
 
 export function load() {
-  try { S = hydrate(JSON.parse(localStorage.getItem(KEY))); } catch { S = fresh(); }
+  try { const json = localStorage.getItem(KEY), raw = JSON.parse(json); backupOnce(json, raw); S = hydrate(raw); } catch { S = fresh(); }
   if (!S.name && tg?.initDataUnsafe?.user?.first_name) S.name = tg.initDataUnsafe.user.first_name;
   rollDay();
 }
@@ -90,7 +102,8 @@ export async function syncCloud() {
   if (!vals) return false;
   try {
     const chunks = keys.map(k => vals[k] || '');
-    S = hydrate(JSON.parse(chunks.join(''))); lastChunks = chunks;
+    const json = chunks.join(''), raw = JSON.parse(json); backupOnce(json, raw);
+    S = hydrate(raw); lastChunks = chunks;
     rollDay(); writeLocal(); notify();
     return true;
   } catch { return false; }
@@ -121,6 +134,9 @@ export const exById = id => allExercises().find(e => e.id === id) || { id, name:
 export function rollDay() {
   const t = today();
   if (S.streak.last && S.streak.last !== t && S.streak.last !== addDays(t, -1)) S.streak.cur = 0;
+  // per-sphere day breakdown is kept for a year, older days shrink back to { xp, q, w }
+  const cut = addDays(t, -365);
+  for (const k in S.days) if (k < cut && S.days[k].s) delete S.days[k].s;
 }
 
 /* ---------- events for the UI (toasts, level-up screen …) ---------- */
@@ -135,11 +151,26 @@ function touchStreak() {
   S.streak.best = Math.max(S.streak.best, S.streak.cur);
 }
 
+// sphere XP; a negative amount (undo) is taken from the sphere first, then from legacy keys that alias to it
+function addStat(sp, xp) {
+  if (xp >= 0) { S.stats[sp] = (S.stats[sp] || 0) + xp; return; }
+  let left = xp;
+  for (const k of [sp, ...Object.keys(ALIAS).filter(a => ALIAS[a] === sp)]) {
+    if (!(k in S.stats)) continue;
+    const take = Math.max(left, -S.stats[k]); S.stats[k] += take; left -= take;
+    if (!left) break;
+  }
+}
 function grant(xp, coins, cat) {
   const before = level().lv;
   S.xp = Math.max(0, S.xp + xp); S.coins = Math.max(0, S.coins + coins);
-  if (cat && cat in S.stats) S.stats[cat] = Math.max(0, S.stats[cat] + xp);
-  day().xp = Math.max(0, day().xp + xp);
+  const d = day();
+  d.xp = Math.max(0, d.xp + xp);
+  if (cat) {
+    const sp = sphereOf(cat);
+    addStat(sp, xp);
+    const ds = (d.s ||= {}); ds[sp] = Math.max(0, (ds[sp] || 0) + xp);
+  }
   const after = level().lv;
   for (let lv = Math.max(before, S.maxLv) + 1; lv <= after; lv++) {
     S.maxLv = lv;
@@ -353,14 +384,15 @@ export function finishDrill(results) { // [{ attr, ok, ms }]
   if (okN) touchStreak();
   const gain = {};
   for (const r of results) if (r.ok) {
-    gain[r.attr] = (gain[r.attr] || 0) + (first ? Math.round((8 + (r.ms < 5000 ? 2 : 0)) * combo()) : 1);
+    const sp = sphereOf(r.attr);
+    gain[sp] = (gain[sp] || 0) + (first ? Math.round((8 + (r.ms < 5000 ? 2 : 0)) * combo()) : 1);
     if (r.ms < 2000) S.counters.drillFast++;
   }
   S.counters.drills++; S.counters.drillOk += okN; if (perfect) S.counters.drillPerfect++;
   let xp = 0;
   for (const [attr, v] of Object.entries(gain)) { grant(v, 0, attr); xp += v; }
   const bonus = perfect && first ? 20 : 0, coins = first ? okN * 2 + (perfect ? 10 : 0) : 0;
-  grant(bonus, coins, 'math');
+  grant(bonus, coins, 'mind');
   checkAchs(); save();
   return { okN, n: results.length, xp: xp + bonus, coins, perfect, first, gain };
 }

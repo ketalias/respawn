@@ -1,7 +1,7 @@
 // RESPAWN — screens and interaction.
 import * as G from './game.js';
 import { S, tg } from './game.js';
-import { xpNeed, rankOf, nextRank, RANKS, CATS, DIFFS, QUEST_IDEAS, BUBBLES, BUBBLES_HURT, GROUPS, SLOTS, ITEMS, ITEM, RAR, THEMES, ACHS, ACH, attrLevel, catOf } from './data.js';
+import { xpNeed, rankOf, nextRank, RANKS, CATS, DIFFS, QUEST_IDEAS, BUBBLES, BUBBLES_HURT, GROUPS, SLOTS, ITEMS, ITEM, RAR, THEMES, ACHS, ACH, attrLevel, catOf, sphereOf, sphereXP } from './data.js';
 import { Stage, AURA, spriteCanvas, sceneCanvas, petCanvas } from './scene.js';
 import moneyModule from './money.js';
 import mindModule, { clockLong } from './mind.js';
@@ -147,7 +147,7 @@ function quests() {
 }
 
 function questSheet(q) {
-  const f = ui.qf = q ? { id: q.id, title: q.title, cat: q.cat, diff: q.diff, type: q.type } : { title: '', cat: 'dis', diff: 'm', type: ui.qtab === 'once' ? 'once' : 'daily' };
+  const f = ui.qf = q ? { id: q.id, title: q.title, cat: sphereOf(q.cat), diff: q.diff, type: q.type } : { title: '', cat: 'dis', diff: 'm', type: ui.qtab === 'once' ? 'once' : 'daily' };
   openSheet(`<h2>${q ? 'Редагувати квест' : 'Новий квест'}</h2>
     <input class="field" id="qf-title" maxlength="80" placeholder="Що треба зробити?" value="${esc(f.title)}" autocomplete="off">
     <div class="lbl">Тип</div>
@@ -289,7 +289,7 @@ function locker() {
 
 /* ---------- PROFILE ---------- */
 function radar() {
-  const keys = Object.keys(CATS), n = keys.length, lv = keys.map(k => attrLevel(S.stats[k])), max = Math.max(5, ...lv) + 1, R = 64, c = 90;
+  const keys = Object.keys(CATS), n = keys.length, lv = keys.map(k => attrLevel(sphereXP(S.stats, k))), max = Math.max(5, ...lv) + 1, R = 64, c = 90;
   const xy = (i, k) => { const a = -Math.PI / 2 + (i * 2 * Math.PI) / n; return [+(c + Math.cos(a) * R * k).toFixed(1), +(c + 4 + Math.sin(a) * R * k).toFixed(1)]; };
   const poly = f => keys.map((_, i) => xy(i, f(i)).join(',')).join(' ');
   return `<svg class="radar" viewBox="0 0 180 180">${[1, 0.66, 0.33].map(k => `<polygon points="${poly(() => k)}" class="rd-g"/>`).join('')}
@@ -324,7 +324,7 @@ function profile() {
     </section>
     <section class="card attrs">
       ${radar()}
-      <div class="attr-l">${Object.entries(CATS).map(([k, c]) => `<div class="attr">${icon(c.icon)}<span>${c.attr}</span><b>${attrLevel(S.stats[k])}</b></div>`).join('')}</div>
+      <div class="attr-l">${Object.entries(CATS).map(([k, c]) => `<div class="attr">${icon(c.icon)}<span>${c.attr}</span><b>${attrLevel(sphereXP(S.stats, k))}</b></div>`).join('')}</div>
     </section>
     <section class="card"><div class="lbl">Активність · 17 тижнів</div>${heat()}</section>
     ${sec('Ачівки', `<span class="count">${got}/${ACHS.length}</span>`)}

@@ -12,7 +12,7 @@ if (q.get('dev') === 'seed') {
   const s = S(), lv = +q.get('lv') || 12;
   s.name = 'Демо'; s.onboarded = true;
   s.streak = { cur: 9, best: 14, last: G.today() };
-  s.stats = { biz: 2200, math: 1300, eng: 1700, dis: 900, body: 500 };
+  s.stats = { biz: 2200, math: 1300, eng: 1700, dis: 900, body: 500, calm: 350, people: 600 }; // math/eng = legacy keys → Розум
   s.money = { ...s.money, goal: 100000, name: 'Студія', cur: '₴' };
   const inc = (d, amt, src, out) => s.money.log.push({ id: G.uid(), d: G.addDays(G.today(), -d), amt, src, out: !!out });
   inc(0, 18000, 'Клієнт А'); inc(2, 24500, 'Лендинг'); inc(5, 12000, 'Консультація'); inc(3, 6400, 'Сервери', true); inc(8, 9000, 'Клієнт А');
