@@ -1,8 +1,8 @@
 // RESPAWN service worker — offline shell. Bump VERSION on every deploy.
-const VERSION = 'respawn-v6';
+const VERSION = 'respawn-v7';
 const SHELL = [
   './', 'index.html', 'manifest.webmanifest', 'css/style.css',
-  'js/app.js', 'js/game.js', 'js/data.js', 'js/ui.js', 'js/scene.js', 'js/sprite.js', 'js/money.js', 'js/mind.js', 'js/drill.js',
+  'js/app.js', 'js/game.js', 'js/data.js', 'js/ui.js', 'js/scene.js', 'js/sprite.js', 'js/money.js', 'js/boss.js', 'js/mind.js', 'js/drill.js',
   'fonts/ps2p-latin.woff2', 'fonts/ps2p-cyr.woff2', 'fonts/tiny5-latin.woff2', 'fonts/tiny5-cyr.woff2',
   'icons/icon-192.png', 'icons/icon-512.png',
 ];

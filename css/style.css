@@ -424,3 +424,32 @@ select.field { appearance: none; -webkit-appearance: none; }
 .ob-sp-t { display: flex; align-items: center; gap: 8px; font-size: 11px; letter-spacing: .14em; text-transform: uppercase; color: var(--mut); margin-bottom: 6px; } .ob-sp-t .ico { color: var(--acc); width: 13px; height: 13px; }
 .ob-qs .chips, .ob-g .chips.wrap { justify-content: flex-start; }
 .kv-s { display: block; font-size: 11px; color: var(--mut); margin-top: 2px; }
+
+/* ---------- boss of the month: cards + fight screen ---------- */
+.boss { width: 100%; text-align: left; }
+.boss-i .cv, .boss-i canvas { display: block; } .boss-i canvas { width: 46px; height: 44px; image-rendering: pixelated; }
+.boss-go { align-self: center; color: var(--red); display: grid; } .boss.dead .boss-go { color: var(--gold); }
+.ar-head { display: flex; align-items: center; gap: 10px; }
+.ar-title { flex: 1; min-width: 0; text-align: center; } .ar-title b { display: block; margin-top: 5px; font: 400 22px/1 var(--pf); letter-spacing: .03em; text-transform: uppercase; }
+.arena { display: flex; flex-direction: column; gap: 10px; padding: 10px; border-radius: 26px; border: 1px solid color-mix(in srgb, var(--red) 42%, transparent); background: #0b0610; box-shadow: 0 24px 50px rgba(0, 0, 0, .45), 0 0 40px color-mix(in srgb, var(--red) 10%, transparent); }
+.arena.dead { border-color: color-mix(in srgb, var(--gold) 50%, transparent); box-shadow: 0 24px 50px rgba(0, 0, 0, .45), 0 0 40px color-mix(in srgb, var(--gold) 10%, transparent); }
+.ar-hp { display: flex; align-items: center; gap: 8px; padding: 0 4px; font: 400 9px var(--px); }
+.ar-hp > span { color: var(--red); } .arena.dead .ar-hp > span { color: var(--gold); }
+.ar-hp > b { min-width: 70px; text-align: right; font: 400 9px var(--px); }
+.ar-bar { position: relative; flex: 1; height: 18px; border: 2px solid var(--tx); border-radius: 3px; background: #1d0a12; overflow: hidden; box-shadow: 0 0 0 2px #0b0610; }
+.ar-bar i { position: absolute; left: 0; top: 0; bottom: 0; }
+.ar-ghost { background: #ffe9a8; }
+.ar-fill { background: linear-gradient(#ff8a8a, var(--red) 55%, #b02a36); box-shadow: inset 0 2px 0 rgba(255, 255, 255, .25); }
+.ar-hp.heal .ar-fill { background: linear-gradient(#8ff0b4, var(--green) 55%, #1f8a4a); }
+.ar-hp.heal .ar-bar { box-shadow: 0 0 0 2px #0b0610, 0 0 16px color-mix(in srgb, var(--green) 60%, transparent); }
+.ar-stage { position: relative; border-radius: 16px; overflow: hidden; aspect-ratio: 96 / 72; background: #000; cursor: pointer; }
+.ar-stage > .cv { display: contents; } .ar-stage .stage-cv { position: absolute; inset: 0; image-rendering: pixelated; }
+.ar-say { top: 5%; max-width: 78%; }
+.ar-form { display: flex; flex-direction: column; gap: 10px; } .ar-form .note { margin: 0; }
+.ar-btns .btn { flex: 1; min-width: 0; padding-left: 10px; padding-right: 10px; } .ar-btns .btn.solid { flex: 1.4; }
+.float.dmg { color: var(--red); font-size: 17px; } .float.dmg.crit { color: #fff; font-size: 22px; text-shadow: 2px 2px 0 #0b0b10, -1px -1px 0 #0b0b10, 0 0 18px var(--red); }
+.float.heal { color: var(--green); font-size: 15px; }
+/* sphere card: ready-made quests flow in the sheet itself (no scroll-inside-scroll on phones) */
+.ideas.all { max-height: none; overflow: visible; }
+/* the main action of a sheet stays reachable at the bottom */
+.sheet-foot { position: sticky; bottom: 0; z-index: 2; padding-top: 10px; background: linear-gradient(transparent, #121216 14px); }

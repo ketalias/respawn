@@ -32,10 +32,10 @@ function fresh() {
     lootOn: null, coinOn: null, settings: { sound: true, haptics: true, rest: 90 },
     // v3 (2.0)
     profile: { g: null },                                   // 'm' | 'f'; null = not chosen yet → current (masculine) wording
-    mods: { money: false, gym: true, focus: true, drill: false, home: ['money', 'drill'] }, // optional modules (Гроші й Розминка — вмикаються в Профілі) + cards pinned on Base
+    mods: { money: true, gym: true, focus: true, drill: false, home: ['money', 'drill'] }, // optional modules (Розминка вмикається в Профілі) + cards pinned on Base
     privacy: { card: 'friends', spheres: true, heat: true, money: false, quests: false },  // used once friends exist
     looks: [],                                              // saved outfits: { name, eq }
-    seen: {},                                               // one-time screens: { v2: «Що нового» shown }
+    seen: { boss: 1 },                                      // one-time flags (boss: «Бос місяця» re-enabled once)
   };
 }
 function hydrate(raw) {
@@ -44,6 +44,7 @@ function hydrate(raw) {
   const s = { ...f, ...raw };
   for (const k of ['streak', 'eq', 'counters', 'settings', 'money', 'acts', 'drill', 'profile', 'mods', 'privacy', 'seen']) s[k] = { ...f[k], ...(raw[k] || {}) };
   if (!raw.mods) s.mods = { ...s.mods, money: true, drill: true }; // saves from before modules existed keep everything they had
+  if (!raw.seen?.boss) { s.mods.money = true; s.seen.boss = 1; } // «Бос місяця» is back on for everyone once (it was off by default for a day)
   // v1 saves had str/int/dis/vit — fold them into the new attributes.
   // Keys and categories from newer versions are kept as-is: never dropped, never remapped.
   const old = raw.stats || {};
@@ -319,7 +320,7 @@ export function wearLook(i) {
 }
 export function deleteLook(i) { S.looks[i] = null; save(); }
 
-/* ---------- money: the monthly income goal is a boss, every income is a hit ---------- */
+/* ---------- money: the monthly PROFIT goal is a boss — income hits it, expenses heal it ---------- */
 export function monthSum(m = ym()) {
   let inc = 0, out = 0; const src = new Set();
   for (const e of S.money.log) if (e.d.startsWith(m)) { if (e.out) out += e.amt; else { inc += e.amt; if (e.src) src.add(e.src.toLowerCase()); } }
@@ -339,6 +340,21 @@ export function setMoney({ goal, cur, name }) {
   if (name !== undefined) S.money.name = String(name).trim().slice(0, 30);
   checkAchs(); save();
 }
+// boss of the month: HP = goal − profit. Once killed, a month stays killed (expenses can't revive it).
+export function bossState(m = ym()) {
+  const g = S.money.goal, sum = monthSum(m), dead = !!S.money.killed[m];
+  return { m, goal: g, ...sum, hp: g ? (dead ? 0 : Math.min(g, Math.max(0, g - sum.net))) : 0, dead };
+}
+function checkBoss(m = ym()) {
+  const g = S.money.goal, now = monthSum(m);
+  if (!g || m !== ym()) return false;
+  if (now.net >= g * 2 && !S.money.over[m]) { S.money.over[m] = true; S.counters.overkill++; }
+  if (now.net < g || S.money.killed[m]) return false;
+  S.money.killed[m] = true; S.counters.goals++;
+  events.push({ t: 'boss', xp: 500, coins: 150 });
+  grant(500, 150, 'biz');
+  return true;
+}
 export function addMoney({ amt, src, out }) {
   amt = Math.round(num(amt) * 100) / 100;
   if (!amt) return null;
@@ -356,12 +372,7 @@ export function addMoney({ amt, src, out }) {
     events.push({ t: 'xp', xp: res.xp, coins });
     grant(res.xp, coins, 'biz');
     const now = monthSum();
-    if (g && now.inc >= g && !S.money.killed[m]) {
-      S.money.killed[m] = true; S.counters.goals++; res.boss = true;
-      events.push({ t: 'boss', xp: 500, coins: 150 });
-      grant(500, 150, 'biz');
-    }
-    if (g && now.inc >= g * 2 && !S.money.over[m]) { S.money.over[m] = true; S.counters.overkill++; }
+    res.boss = checkBoss(m);
     if (now.src >= 3 && S.money.src3 !== m) { S.money.src3 = m; S.counters.src3++; }
     const best = bestOtherMonth();
     if (best > 0 && before <= best && now.inc > best && S.money.athOn !== m) { S.money.athOn = m; S.counters.ath++; events.push({ t: 'ath' }); }
@@ -369,7 +380,7 @@ export function addMoney({ amt, src, out }) {
   checkAchs(); save();
   return res;
 }
-export function deleteMoney(id) { S.money.log = S.money.log.filter(e => e.id !== id); save(); }
+export function deleteMoney(id) { S.money.log = S.money.log.filter(e => e.id !== id); checkBoss(); checkAchs(); save(); } // removing an expense can finish the boss
 
 export function actCount(id) { return S.acts.d === today() ? S.acts.n[id] || 0 : 0; }
 export function doAct(id) {

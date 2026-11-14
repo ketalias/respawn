@@ -155,12 +155,13 @@ const qfSum = f => { const D = DIFFS[f.diff] || DIFFS.m; return `${f.type === 'o
 const qfIdeas = f => freshIdeas(f.cat).map(([x, i]) => `<button class="chip-b sm" data-act="idea" data-s="${f.cat}" data-i="${i}">${esc(x[0])}</button>`).join('') || '<span class="note">Усі ідеї цієї сфери вже у твоїх квестах.</span>';
 function questSheet(q, cat) {
   const f = ui.qf = q ? { id: q.id, title: q.title, cat: sphereOf(q.cat), diff: q.diff, type: q.type } : { title: '', cat: cat || ui.lastCat, diff: 'm', type: ui.qtab === 'once' ? 'once' : 'daily' };
-  ui.sphereBack = $('#sph') ? ui.sphere : null; // opened from a sphere card → go back there after saving
+  ui.sphereBack = $('#sph') ? ui.sphere : null; // opened from a sphere card → go back there after saving, at the same spot
+  ui.sphereY = ui.sphereBack ? $('#sph').closest('.sheet-body').scrollTop : 0;
   openSheet(`<h2>${q ? 'Редагувати квест' : 'Новий квест'}</h2>
     <input class="field" id="qf-title" maxlength="80" placeholder="Що треба зробити?" value="${esc(f.title)}" autocomplete="off">
     <div class="lbl">Сфера</div>
     <div class="chips three">${Object.entries(CATS).map(([v, c]) => `<button class="chip-b ${f.cat === v ? 'on' : ''}" data-act="qf" data-k="cat" data-v="${v}">${icon(c.icon)}${c.name}</button>`).join('')}</div>
-    ${q ? '' : `<div class="lbl">Ідеї</div><div class="chips wrap ideas" id="qf-ideas">${qfIdeas(f)}</div>`}
+    ${q ? '' : `<div class="lbl">Ідеї</div><div class="chips wrap ideas all" id="qf-ideas">${qfIdeas(f)}</div>`}
     <button class="fold" data-act="qf-more">${q ? '▾' : '▸'} Більше · <span id="qf-sum">${qfSum(f)}</span></button>
     <div id="qf-more" ${q ? '' : 'hidden'}>
       <div class="lbl">Тип</div>
@@ -170,7 +171,7 @@ function questSheet(q, cat) {
     </div>
     <div class="sheet-foot">${q ? `<button class="btn ghost danger" data-act="quest-del">${icon('trash')}</button>` : ''}<button class="btn solid grow" data-act="quest-save">${q ? 'Зберегти' : 'Додати квест'}</button></div>`);
 }
-const afterQuestSheet = () => { if (ui.sphereBack) sphereSheet(ui.sphereBack); else closeSheet(); ui.sphereBack = null; };
+const afterQuestSheet = () => { if (ui.sphereBack) { sphereSheet(ui.sphereBack); const b = $('#sph')?.closest('.sheet-body'); if (b) { b.scrollTop = ui.sphereY; requestAnimationFrame(() => { b.scrollTop = ui.sphereY; }); } } else closeSheet(); ui.sphereBack = null; };
 
 /* ---------- GYM ---------- */
 function gym() {
@@ -371,7 +372,7 @@ function profile() {
 }
 
 /* ---------- render ---------- */
-const ctx = { G, ui, icon, esc, fmt, tile, sec, openSheet, closeSheet, react, render, sfx, buzz, toast, ask, dateUA, confetti, rain, overlay, nextOverlay, $ };
+const ctx = { G, ui, icon, esc, fmt, tile, sec, openSheet, closeSheet, react, render, sfx, buzz, toast, ask, dateUA, confetti, rain, overlay, nextOverlay, cv, go, $ };
 const money = moneyModule(ctx), mind = mindModule(ctx);
 /* ---------- SPHERES ---------- */
 const sphereLv = id => sphereLevel(sphereXP(S.stats, id));
@@ -406,7 +407,7 @@ function sphereBody(id) {
     <div class="xp-bar slim"><i style="width:${Math.max(2, (L.cur / L.need) * 100)}%"></i></div>
     ${sec('Квести', `<span class="count">${qs.length}</span>`)}
     <div class="qlist">${qs.map(questCard).join('') || `<div class="empty"><span>Тут ще порожньо — візьми готовий квест нижче.</span></div>`}</div>
-    ${tpl.length ? `${sec('Готові квести')}<div class="chips wrap ideas">${tpl.map(([x, i]) => `<button class="chip-b sm" data-act="tpl-add" data-s="${id}" data-i="${i}">${icon('plus')}${esc(x[0])}</button>`).join('')}</div><p class="note">Тап — і квест одразу у твоєму списку.</p>` : ''}
+    ${tpl.length ? `${sec('Готові квести')}<div class="chips wrap ideas all">${tpl.map(([x, i]) => `<button class="chip-b sm" data-act="tpl-add" data-s="${id}" data-i="${i}">${icon('plus')}${esc(x[0])}</button>`).join('')}</div><p class="note">Тап — і квест одразу у твоєму списку.</p>` : ''}
     ${ks.length ? `${sec('Скіли')}<div class="rows">${ks.map(k => `<div class="row static"><span class="row-t"><b>${esc(k.name)}</b><small>LV ${skillLevel(k.mins)} · ${kg(k.mins / 60)} год фокусу</small></span></div>`).join('')}</div>` : ''}
     <div class="sheet-foot"><button class="btn solid grow" data-act="quest-new" data-cat="${id}">${icon('plus')}Свій квест</button></div>`;
 }
@@ -417,7 +418,7 @@ function spheres() {
   const body = ui.stab === 'body' ? gym() : ui.stab === 'mind' ? mind.view() : ui.stab === 'money' ? money.view() : spheresHome();
   return `${seg.length > 1 ? `<div class="seg2 n${seg.length}">${seg.map(([v, n]) => `<button class="${ui.stab === v ? 'on' : ''}" data-act="stab" data-v="${v}">${n}</button>`).join('')}</div>` : ''}${body}`;
 }
-const VIEWS = { home, quests, money: money.view, spheres, locker, profile };
+const VIEWS = { home, quests, money: money.view, spheres, locker, profile, boss: money.arena };
 // Every tap re-renders the screen from scratch. WebKit (Telegram on iPhone) drops the scroll position of a container whose
 // content is replaced, and inner scrollers (chip rows, idea lists) always restart at 0 — so positions are saved before and put back after.
 const INNER = '.chips.scroll, .seg2, .ideas';
@@ -470,11 +471,11 @@ function react(pt) {
 
 function bossDown(root, e) {
   root.innerHTML = `<div class="ov">
-    <div class="ov-kicker">Ціль місяця закрито</div>
+    <div class="ov-kicker">Ціль прибутку закрито</div>
     <div class="lvup-title sm">БОСА ПЕРЕМОЖЕНО</div>
     <div class="boss-big">${icon('skull')}</div>
     <div class="loot-list">
-      <div class="loot-row">${icon('cash')}<span>${fmt(G.monthSum().inc)} ${esc(S.money.cur)} за місяць</span></div>
+      <div class="loot-row">${icon('cash')}<span>${fmt(G.monthSum().net)} ${esc(S.money.cur)} прибутку за місяць</span></div>
       <div class="loot-row">${icon('bolt')}<span>+${e.xp} XP</span></div>
       <div class="loot-row">${icon('coin')}<span>+${e.coins} монет</span></div>
     </div>
@@ -596,7 +597,7 @@ const A = {
     render();
   },
   ver: (el, e) => { if (++ui.verTaps >= 7 && G.secret('dev')) { sfx('level'); react({ x: e.clientX, y: e.clientY }); } else if (ui.verTaps < 7) sfx('tap'); },
-  'sheet-close': () => closeSheet(),
+  'sheet-close': () => { if (ui.sphereBack && $('#qf-title')) afterQuestSheet(); else closeSheet(); },
   'overlay-next': () => { sfx('tap'); nextOverlay(); render(); },
   'ob-next': () => { const nm = $('#ob-name'); if (nm) S.name = nm.value.trim() || S.name; G.save(true); OB.step = Math.min(2, OB.step + 1); sfx('tap'); buzz('light'); obRender(true); },
   'ob-back': () => { OB.step = Math.max(0, OB.step - 1); sfx('tap'); obRender(true); },

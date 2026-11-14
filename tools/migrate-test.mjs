@@ -172,7 +172,26 @@ console.log('new player');
 const n = load(undefined);
 ok(Object.keys(n.stats).join() === Object.keys(CATS).join(), 'fresh stats = the 6 spheres');
 ok(n.quests.every(q => CATS[q.cat]) && n.skills.every(k => CATS[k.cat]), 'starter quests & skills use canonical sphere ids');
-ok(!n.mods.money && !n.mods.drill && n.mods.gym && n.mods.focus, 'new player: Гроші й Розминка off by default, Зал і Фокус on');
+ok(n.mods.money && !n.mods.drill && n.mods.gym && n.mods.focus, 'new player: Бос місяця, Зал і Фокус on; Розминка off');
+G.S.mods.money = false; G.save(); G.flush();
+ok(load(JSON.parse(store['respawn.v1'])).mods.money === false, 'a new player who turns Бос місяця off keeps it off');
+const day1 = load({ ...clone(v2), v: 3, mods: { money: false, gym: true, focus: true, drill: false }, seen: {} });
+ok(day1.mods.money && day1.seen.boss, 'saves from the day it was off by default get Бос місяця back once');
+
+/* ---------- 12. boss of the month: HP = goal − profit ---------- */
+console.log('boss');
+load(undefined); G.setMoney({ goal: 10000 });
+let bs = G.bossState(); ok(bs.hp === 10000 && !bs.dead, 'fresh boss has full HP');
+G.addMoney({ amt: 4000 }); bs = G.bossState(); ok(bs.hp === 6000, 'income hits', bs.hp);
+G.addMoney({ amt: 1500, out: true }); bs = G.bossState(); ok(bs.hp === 7500, 'expense heals', bs.hp);
+G.addMoney({ amt: 99999, out: true }); bs = G.bossState(); ok(bs.hp === 10000, 'HP never above the goal', bs.hp);
+const bigOut = G.S.money.log[0].id;
+let rr = G.addMoney({ amt: 8000 }); ok(!rr.boss && !G.bossState().dead, 'income ≥ goal but profit < goal → boss alive');
+G.drain(); G.deleteMoney(bigOut); bs = G.bossState();
+ok(bs.dead && G.S.counters.goals === 1 && G.drain().some(e => e.t === 'boss'), 'deleting the big expense → profit ≥ goal → boss dies once', JSON.stringify(bs));
+G.addMoney({ amt: 50000, out: true }); ok(G.bossState().dead && G.bossState().hp === 0, 'a killed boss stays dead after expenses');
+load(undefined); G.setMoney({ goal: 1000 }); rr = G.addMoney({ amt: 1200 });
+ok(rr.boss && G.S.money.killed[G.ym()] && G.S.counters.goals === 1, 'one big income kills the boss');
 ok(!n.eq.face && n.eq.body === 'a', 'new player starts with a neutral look (no glasses)');
 
 console.log(fails ? `\n${fails} FAILED` : '\nALL PASSED');
