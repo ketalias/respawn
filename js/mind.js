@@ -33,7 +33,8 @@ export default function mindModule(c) {
 
   function view() {
     const s = S(), f = s.focus, fk = f && s.skills.find(k => k.id === f.skill);
-    return `${drillCard()}
+    if (!s.mods.focus) return s.mods.drill ? drillCard() : '';
+    return `${s.mods.drill ? drillCard() : ''}
     ${fk ? `<section class="card wk-head focus"><div><div class="lbl">Фокус · ${esc(fk.name)}</div><div class="wk-time" id="focus-time">${clockLong((Date.now() - f.start) / 1000)}</div></div>
       <div class="focus-btns"><button class="btn solid sm" data-act="focus-stop">${icon('stop')}Завершити</button><button class="btn ghost sm" data-act="focus-cancel">Скасувати</button></div></section>` : ''}
     ${sec('Скіли', `<span class="count">${hrs(s.counters.focusMin)} год фокусу</span>`)}

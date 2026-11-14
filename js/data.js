@@ -313,6 +313,11 @@ export const ACHS = [
   A('own25', 'Колекціонер', 'Збери 25 куплених чи здобутих скінів', 'shirt', 's', 80, s => [s.owned.length, 25]),
   A('rich', 'Скрудж', 'Накопич 500 монет', 'coin', 's', 50, s => [Math.min(500, s.counters.maxCoins || 0), 500]),
   A('loot7', 'Лутер', 'Забери денний лут 7 разів', 'chest', 'b', 30, cnt('loot', 7)),
+  // сфери (2.0)
+  A('sph5', 'Перша п\'ятірка', 'Прокачай будь-яку сферу до 5 рівня', 'hex', 'b', 30, s => [Math.max(...Object.keys(CATS).map(k => attrLevel(sphereXP(s.stats, k)))), 5]),
+  A('sph10', 'Десятка', 'Прокачай будь-яку сферу до 10 рівня', 'hex', 's', 80, s => [Math.max(...Object.keys(CATS).map(k => attrLevel(sphereXP(s.stats, k)))), 10]),
+  A('sph20', 'Майстер сфери', 'Прокачай будь-яку сферу до 20 рівня', 'hex', 'g', 250, s => [Math.max(...Object.keys(CATS).map(k => attrLevel(sphereXP(s.stats, k)))), 20]),
+  A('bal3', 'Баланс', 'Усі 6 сфер 3 рівня', 'hex', 's', 60, s => [Math.min(...Object.keys(CATS).map(k => attrLevel(sphereXP(s.stats, k)))), 3]),
   A('attr5', 'Гармонія', 'Усі 6 сфер 5 рівня', 'heart', 'g', 120, s => [Math.min(...Object.keys(CATS).map(k => attrLevel(sphereXP(s.stats, k)))), 5]),
   // секрети — умови приховані, поки не знайдеш
   A('tap', 'Не чіпай мене', 'Тапнути персонажа 50 разів', 'skull', 's', 30, cnt('taps', 50), S1),
@@ -334,3 +339,10 @@ const ACH_F = { perf7: 'Перфекціоністка', st30: 'Незламна
   shop1: 'Шопоголічка', own25: 'Колекціонерка', loot7: 'Лутерка', s_lamp: 'Електрикиня' };
 for (const a of ACHS) if (ACH_F[a.id]) a.nameF = ACH_F[a.id];
 export const ACH = Object.fromEntries(ACHS.map(a => [a.id, a]));
+// achievements that belong to an optional module: hidden while it's off (unless already earned)
+const ACH_MOD = {
+  money: ['m1', 'm25', 'goalset', 'boss1', 'boss3', 'boss6', 'over', 'ath', 'src3', 'act50', 'act500', 'deal10', 's_leet', 's_nice', 's_404'],
+  drill: ['dr1', 'dr100', 'dr1000', 'drp5', 'fast', 's_42'], focus: ['mathh10', 'engh10', 'f1', 'f90', 'h100', 'sk5'], gym: ['w1', 'w10', 'w25', 'pr1'],
+};
+for (const [mod, ids] of Object.entries(ACH_MOD)) for (const id of ids) ACH[id].mod = mod;
+export const MODS = [['money', 'Бос місяця', 'ціль доходу, бізнес-дії, каса'], ['gym', 'Зал', 'журнал тренувань і рекорди'], ['focus', 'Фокус', 'таймер і скіли з годинами'], ['drill', 'Розминка мозку', 'щоденні задачі на швидкість']];

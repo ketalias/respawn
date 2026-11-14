@@ -155,7 +155,19 @@ G.deleteLook(1); ok(!G.S.looks[1] && G.wearLook(1) === false, 'deleted look is g
 G.flush(); ok(JSON.parse(store['respawn.v1']).looks.length === 3, 'looks are saved');
 ok(['pet:dog', 'pet:rabbit', 'aura:sakura', 'scene:library', 'theme:mint', 'top:gown'].every(id => ALL.find(i => i.id === id)?.src?.at === 15), 'every sphere has a LV 15 reward');
 
-/* ---------- 10. new player ---------- */
+/* ---------- 10. онбординг, «Що нового», модулі, ачівки сфер ---------- */
+console.log('stage 6');
+const { ACH: A6 } = await import('../js/data.js');
+const o = load(v2);
+ok(o.seen && !o.seen.v2 && o.onboarded, 'old account → «Що нового» will show once');
+ok(G.setStarterQuests([['x', 'calm', 'e']]) === false && G.S.quests.length === v2.quests.length, 'onboarding quests never replace a played save');
+load(undefined);
+ok(G.setStarterQuests([['Медитація', 'calm', 'e'], ['Книга', 'mind', 'x', 'once']]) && G.S.quests.length === 2 && G.S.quests[1].type === 'once', 'new player gets exactly the picked quests');
+ok(A6.m1.mod === 'money' && A6.w1.mod === 'gym' && A6.dr1.mod === 'drill' && A6.f1.mod === 'focus' && !A6.q1.mod, 'module achievements are tagged');
+load(v2); G.completeQuest('a2');
+ok(G.S.ach.sph5 && G.S.ach.sph10 && !G.S.ach.bal3, 'sphere achievements: Гроші LV 13 → «П\'ятірка» + «Десятка», not «Баланс»');
+
+/* ---------- 11. new player ---------- */
 console.log('new player');
 const n = load(undefined);
 ok(Object.keys(n.stats).join() === Object.keys(CATS).join(), 'fresh stats = the 6 spheres');

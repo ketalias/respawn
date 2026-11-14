@@ -35,13 +35,14 @@ function fresh() {
     mods: { money: true, gym: true, focus: true, drill: true, home: ['money', 'drill'] }, // optional modules + cards pinned on Base
     privacy: { card: 'friends', spheres: true, heat: true, money: false, quests: false },  // used once friends exist
     looks: [],                                              // saved outfits: { name, eq }
+    seen: {},                                               // one-time screens: { v2: «Що нового» shown }
   };
 }
 function hydrate(raw) {
   const f = fresh();
   if (!raw || typeof raw !== 'object') return f;
   const s = { ...f, ...raw };
-  for (const k of ['streak', 'eq', 'counters', 'settings', 'money', 'acts', 'drill', 'profile', 'mods', 'privacy']) s[k] = { ...f[k], ...(raw[k] || {}) };
+  for (const k of ['streak', 'eq', 'counters', 'settings', 'money', 'acts', 'drill', 'profile', 'mods', 'privacy', 'seen']) s[k] = { ...f[k], ...(raw[k] || {}) };
   // v1 saves had str/int/dis/vit — fold them into the new attributes.
   // Keys and categories from newer versions are kept as-is: never dropped, never remapped.
   const old = raw.stats || {};
@@ -239,6 +240,12 @@ export function addQuest({ title, cat, diff, type }) {
   S.quests.unshift({ id: uid(), title: title.trim(), cat, diff, type, doneOn: null, streak: 0, last: null });
   if (/hello,?\s*world/i.test(title)) secret('hello');
   save();
+}
+// onboarding: the quests a brand-new player picked replace the default starters (never touches a played save)
+export function setStarterQuests(list) {
+  if (S.counters.quests || S.xp) return false;
+  S.quests = list.map(([title, cat, diff, type = 'daily']) => ({ id: uid(), title, cat, diff, type, doneOn: null, streak: 0, last: null }));
+  save(); return true;
 }
 export function editQuest(id, patch) { const q = S.quests.find(q => q.id === id); if (q) Object.assign(q, patch); save(); }
 export function deleteQuest(id) { S.quests = S.quests.filter(q => q.id !== id); save(); }

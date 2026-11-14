@@ -40,9 +40,9 @@ export default function moneyModule(c) {
   // compact version for the home screen
   function homeCard() {
     const m = S().money, sum = G.monthSum();
-    if (!m.goal) return `<button class="card loot" data-act="go" data-tab="money"><span class="loot-i">${icon('skull')}</span><span class="loot-t"><b>Бос місяця</b><small>Постав ціль доходу — і бий її записами</small></span><span class="loot-go">${icon('play')}</span></button>`;
+    if (!m.goal) return `<button class="card loot" data-act="go" data-tab="spheres" data-stab="money"><span class="loot-i">${icon('skull')}</span><span class="loot-t"><b>Бос місяця</b><small>Постав ціль доходу — і бий її записами</small></span><span class="loot-go">${icon('play')}</span></button>`;
     const pct = Math.min(100, (sum.inc / m.goal) * 100), dead = sum.inc >= m.goal;
-    return `<button class="card mini-boss ${dead ? 'dead' : ''}" data-act="go" data-tab="money">
+    return `<button class="card mini-boss ${dead ? 'dead' : ''}" data-act="go" data-tab="spheres" data-stab="money">
       <div class="mini-top"><span class="lbl">${icon(dead ? 'crown' : 'skull')} Бос місяця</span><b>${dead ? 'переможено' : `${short(sum.inc)} / ${short(m.goal)} ${esc(m.cur)}`}</b></div>
       <div class="hp slim"><i style="width:${dead ? 100 : 100 - pct}%"></i></div></button>`;
   }

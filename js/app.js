@@ -1,14 +1,15 @@
 // RESPAWN — screens and interaction.
 import * as G from './game.js';
 import { S, tg } from './game.js';
-import { xpNeed, rankOf, nextRank, RANKS, CATS, DIFFS, SPHERE_QUESTS, BUBBLES, BUBBLES_HURT, GROUPS, SLOTS, ITEMS, ITEM, RAR, THEMES, ACHS, ACH, attrLevel, catOf, sphereOf, sphereXP, sphereLevel, skillLevel } from './data.js';
+import { MODS, xpNeed, rankOf, nextRank, RANKS, CATS, DIFFS, SPHERE_QUESTS, BUBBLES, BUBBLES_HURT, GROUPS, SLOTS, ITEMS, ITEM, RAR, THEMES, ACHS, ACH, attrLevel, catOf, sphereOf, sphereXP, sphereLevel, skillLevel } from './data.js';
 import { Stage, AURA, spriteCanvas, sceneCanvas, petCanvas } from './scene.js';
 import moneyModule from './money.js';
 import mindModule, { clockLong } from './mind.js';
 import { $, esc, fmt, icon, buzz, sfx, confetti, rain, floatText, toast, openSheet, closeSheet, overlay, nextOverlay } from './ui.js';
 
 const view = $('#view'), topEl = $('#top'), tabsEl = $('#tabs'), restEl = $('#rest');
-const TABS = [['home', 'home', 'База'], ['quests', 'sword', 'Квести'], ['money', 'cash', 'Гроші'], ['spheres', 'hex', 'Сфери'], ['locker', 'shirt', 'Шафка']];
+// 4 tabs; the 5th place is kept for «Друзі». Money / focus / gym live inside «Сфери».
+const TABS = [['home', 'home', 'База'], ['quests', 'sword', 'Квести'], ['spheres', 'hex', 'Сфери'], ['locker', 'shirt', 'Шафка']];
 const ui = { tab: 'home', qtab: 'daily', slot: 'top', tryOn: null, exGroup: -1, exQuery: '', qf: null, rest: null, doneOpen: false, stab: 'spheres', sphere: null, sphereBack: null, lastCat: 'dis', lampOff: false, lampTaps: 0, verTaps: 0, heroTaps: 0 };
 
 const acc = () => (THEMES[S.eq.theme] || THEMES.mono)[0];
@@ -125,8 +126,8 @@ function home() {
 
   ${sec('Квести дня', `<button class="link" data-act="go" data-tab="quests">усі →</button>`)}
   <div class="qlist">${list.length ? list.map(questCard).join('') : `<div class="empty">${icon('star')}<b>Усе закрито</b><span>${dailies.length ? 'Ідеальний день. Додай ще квест або відпочивай.' : 'Додай свої перші квести.'}</span></div>`}</div>
-  ${G.drillFresh() ? mind.drillCard() : ''}
-  ${money.homeCard()}
+  ${S.mods.drill && G.drillFresh() ? mind.drillCard() : ''}
+  ${S.mods.money ? money.homeCard() : ''}
   ${nextReward()}`;
 }
 
@@ -329,7 +330,7 @@ function heat() {
   return `<div class="heat">${cells.join('')}</div>`;
 }
 function profile() {
-  const L = G.level(), r = G.rank(), nr = nextRank(L.lv), got = ACHS.filter(a => S.ach[a.id]).length;
+  const L = G.level(), r = G.rank(), nr = nextRank(L.lv), achs = ACHS.filter(a => !a.mod || S.mods[a.mod] || S.ach[a.id]), got = achs.filter(a => S.ach[a.id]).length;
   const days = Math.max(1, Math.round((Date.now() - new Date(S.createdAt + 'T00:00:00')) / 864e5) + 1);
   const row = (k, v) => `<div class="kv"><span>${k}</span><b>${v}</b></div>`;
   return `<section class="card prof">
@@ -346,8 +347,8 @@ function profile() {
       <div class="attr-l">${Object.entries(CATS).map(([k, c]) => `<div class="attr">${icon(c.icon)}<span>${c.attr}</span><b>${attrLevel(sphereXP(S.stats, k))}</b></div>`).join('')}</div>
     </section>
     <section class="card"><div class="lbl">Активність · 17 тижнів</div>${heat()}</section>
-    ${sec('Ачівки', `<span class="count">${got}/${ACHS.length}</span>`)}
-    <div class="achs">${ACHS.map(a => { const on = !!S.ach[a.id]; return `<button class="ach t-${a.tier} ${on ? 'on' : ''}" data-act="ach-open" data-id="${a.id}"><span class="ach-i">${icon(on ? a.icon : 'lock')}</span><small>${a.secret && !on ? '???' : G.nm(a)}</small></button>`; }).join('')}</div>
+    ${sec('Ачівки', `<span class="count">${got}/${achs.length}</span>`)}
+    <div class="achs">${achs.map(a => { const on = !!S.ach[a.id]; return `<button class="ach t-${a.tier} ${on ? 'on' : ''}" data-act="ach-open" data-id="${a.id}"><span class="ach-i">${icon(on ? a.icon : 'lock')}</span><small>${a.secret && !on ? '???' : G.nm(a)}</small></button>`; }).join('')}</div>
     ${sec('Статистика')}
     <section class="card kvs">
       ${row('Усього XP', fmt(S.xp))}${row('Квестів виконано', fmt(S.counters.quests))}${row('Ідеальних днів', S.counters.perfect)}
@@ -357,6 +358,7 @@ function profile() {
     ${sec('Налаштування')}
     <section class="card kvs">
       <div class="kv"><span>Звертання</span><div class="chips">${[['m', 'Він'], ['f', 'Вона']].map(([v, n]) => `<button class="chip-b sm ${S.profile.g === v ? 'on' : ''}" data-act="set-g" data-v="${v}">${n}</button>`).join('')}</div></div>
+      ${MODS.map(([k, n, d]) => `<div class="kv"><span>${n}<small class="kv-s">${d}</small></span><button class="sw ${S.mods[k] ? 'on' : ''}" data-act="mod-toggle" data-k="${k}" aria-label="${n}"><i></i></button></div>`).join('')}
       <div class="kv"><span>Звук</span><button class="sw ${S.settings.sound ? 'on' : ''}" data-act="set-toggle-opt" data-k="sound" aria-label="Звук"><i></i></button></div>
       <div class="kv"><span>Вібрація</span><button class="sw ${S.settings.haptics ? 'on' : ''}" data-act="set-toggle-opt" data-k="haptics" aria-label="Вібрація"><i></i></button></div>
       <div class="kv"><span>Відпочинок між підходами</span><div class="chips">${[0, 60, 90, 120, 180].map(v => `<button class="chip-b sm ${S.settings.rest === v ? 'on' : ''}" data-act="set-rest" data-v="${v}">${v ? v + 'с' : 'вимк'}</button>`).join('')}</div></div>
@@ -407,12 +409,14 @@ function sphereBody(id) {
 }
 function sphereSheet(id) { ui.sphere = id; openSheet(`<div id="sph">${sphereBody(id)}</div>`); }
 function spheres() {
-  const seg = [['spheres', 'Сфери'], ['mind', 'Фокус'], ['body', 'Зал']];
-  return `<div class="seg2 three">${seg.map(([v, n]) => `<button class="${ui.stab === v ? 'on' : ''}" data-act="stab" data-v="${v}">${n}</button>`).join('')}</div>
-    ${ui.stab === 'body' ? gym() : ui.stab === 'mind' ? mind.view() : spheresHome()}`;
+  const m = S.mods, seg = [['spheres', 'Сфери'], m.money && ['money', 'Гроші'], (m.focus || m.drill) && ['mind', m.focus ? 'Фокус' : 'Розминка'], m.gym && ['body', 'Зал']].filter(Boolean);
+  if (!seg.some(([v]) => v === ui.stab)) ui.stab = 'spheres';
+  const body = ui.stab === 'body' ? gym() : ui.stab === 'mind' ? mind.view() : ui.stab === 'money' ? money.view() : spheresHome();
+  return `${seg.length > 1 ? `<div class="seg2 n${seg.length}">${seg.map(([v, n]) => `<button class="${ui.stab === v ? 'on' : ''}" data-act="stab" data-v="${v}">${n}</button>`).join('')}</div>` : ''}${body}`;
 }
 const VIEWS = { home, quests, money: money.view, spheres, locker, profile };
 function render() {
+  if (ui.tab === 'money') { ui.tab = 'spheres'; ui.stab = 'money'; } // old links / deep links
   applyTheme(); cvReg = {};
   renderTop(); renderTabs();
   view.dataset.tab = ui.tab;
@@ -499,14 +503,63 @@ function workoutDone(root, res) {
   sfx(prs.length ? 'pr' : 'buy'); buzz('success'); rain(prs.length ? 120 : 60);
 }
 
+/* ---------- onboarding: 3 short steps (name → character → quests) ---------- */
+let obRoot = null;
+const OB = { step: 0, q: null };
+const OB_LOOK = [
+  ['body', 'Фігура', [['a', 'A'], ['b', 'B']]],
+  ['skin', 'Шкіра', ['s1', 's2', 's3', 's4']],
+  ['hair', 'Зачіска', [['messy', 'Хаос'], ['buzz', 'Їжачок'], ['bob', 'Каре'], ['ponytail', 'Хвіст'], ['braid', 'Коса'], ['bald', 'Лисий']]],
+  ['hairColor', 'Колір', ['black', 'brown']],
+];
+const obDots = () => `<div class="ob-dots">${[0, 1, 2].map(i => `<i class="${i === OB.step ? 'on' : i < OB.step ? 'done' : ''}"></i>`).join('')}</div>`;
+const obStage = () => `<div class="lvup-stage">${cv(() => stage('intro', S.eq, { w: 120, h: 96, floor: 14 }).cv)}<div class="scan"></div></div>`;
 function onboarding(root) {
-  root.innerHTML = `<div class="ov intro">
-    <div class="logo">RESPAWN</div>
-    <div class="lvup-stage">${cv(() => stage('intro', S.eq, { w: 120, h: 96, floor: 14 }).cv)}<div class="scan"></div></div>
-    <p>Зараз ти <b>NPC</b> у сірій футболці.<br>Закривай квести, тягай залізо, фарм XP — і персонаж еволюціонує разом із тобою.</p>
-    <input class="field" id="ob-name" maxlength="20" placeholder="Як тебе звати?" value="${esc(S.name)}" autocomplete="off">
-    <div class="ob-g"><span>Як до тебе звертатись?</span><div class="chips two">${[['m', 'Він'], ['f', 'Вона']].map(([v, n]) => `<button class="chip-b ${S.profile.g === v ? 'on' : ''}" data-act="ob-g" data-v="${v}">${n}</button>`).join('')}</div></div>
-    <button class="btn next big" data-act="onboard">Почати гру</button>
+  obRoot = root;
+  if (!OB.q) OB.q = new Set(Object.keys(CATS).map(id => `${id}:0`)); // one main daily per sphere preselected
+  const gChips = act => `<div class="chips two">${[['m', 'Він'], ['f', 'Вона']].map(([v, n]) => `<button class="chip-b ${S.profile.g === v ? 'on' : ''}" data-act="${act}" data-v="${v}">${n}</button>`).join('')}</div>`;
+  const steps = [
+    () => `<div class="logo">RESPAWN</div>${obStage()}
+      <p>Зараз ти <b>NPC</b> у сірій футболці.<br>Закривай квести у 6 сферах життя, фарм XP — і персонаж еволюціонує разом із тобою.</p>
+      <input class="field" id="ob-name" maxlength="20" placeholder="Як тебе звати?" value="${esc(S.name)}" autocomplete="off">
+      <div class="ob-g"><span>Як до тебе звертатись?</span>${gChips('ob-g')}</div>
+      <button class="btn next big" data-act="ob-next">Далі</button>`,
+    () => `<div class="ov-kicker">Крок 2 / 3</div><div class="lvup-title sm">Твій персонаж</div>${obStage()}
+      ${OB_LOOK.map(([slot, name, opts]) => `<div class="ob-g"><span>${name}</span><div class="chips wrap ob-opts">${opts.map(o => {
+        const [v, n] = Array.isArray(o) ? o : [o, ''], it = ITEM[`${slot}:${v}`], on = S.eq[slot] === v;
+        return `<button class="chip-b sm ${on ? 'on' : ''}" data-act="ob-eq" data-slot="${slot}" data-v="${v}">${it?.sw ? `<i class="dot" style="--sw:${it.sw}"></i>` : ''}${n || it?.name || v}</button>`;
+      }).join('')}</div></div>`).join('')}
+      <p class="note">Усе це можна змінити в Шафці. Там же — ще 160 скінів.</p>
+      <div class="ob-nav"><button class="btn ghost" data-act="ob-back">Назад</button><button class="btn next big grow" data-act="ob-next">Далі</button></div>`,
+    () => `<div class="ov-kicker">Крок 3 / 3</div><div class="lvup-title sm">Що качаємо?</div>
+      <p>Обери кілька щоденних квестів — по одному на сферу вже вибрано. Раджу 3–6, решту додаси потім.</p>
+      <div class="ob-qs">${Object.entries(CATS).map(([id, c]) => `<div class="ob-sp"><div class="ob-sp-t">${icon(c.icon)}${c.name}</div><div class="chips wrap">${SPHERE_QUESTS[id].slice(0, 3).map((x, i) => `<button class="chip-b sm ${OB.q.has(`${id}:${i}`) ? 'on' : ''}" data-act="ob-q" data-k="${id}:${i}">${esc(x[0])}</button>`).join('')}</div></div>`).join('')}</div>
+      <div class="ob-g"><span>Ще в грі є — вимкни зайве</span><div class="chips wrap">${MODS.map(([k, n]) => `<button class="chip-b sm ${S.mods[k] ? 'on' : ''}" data-act="ob-mod" data-k="${k}">${n}</button>`).join('')}</div></div>
+      <div class="ob-nav"><button class="btn ghost" data-act="ob-back">Назад</button><button class="btn next big grow" data-act="onboard">Почати гру · ${OB.q.size}</button></div>`,
+  ];
+  root.innerHTML = `<div class="ov intro ob">${OB.step ? obDots() : ''}${steps[OB.step]()}</div>`;
+  hydrate(root);
+}
+const obRender = () => { if (obRoot) { onboarding(obRoot); obRoot.scrollTop = 0; } };
+
+/* ---------- «Що нового» for players from 1.x (once) ---------- */
+function whatsNew(root) {
+  const got = S.owned.map(id => ITEM[id]).filter(it => it?.src?.sp);
+  const thumbs = got.slice(0, 6).map(it => `<span class="news-it">${itemThumb(it)}</span>`).join('');
+  const gChips = `<div class="chips two">${[['m', 'Він'], ['f', 'Вона']].map(([v, n]) => `<button class="chip-b ${S.profile.g === v ? 'on' : ''}" data-act="news-g" data-v="${v}">${n}</button>`).join('')}</div>`;
+  const bChips = `<div class="chips two">${[['a', 'Фігура A'], ['b', 'Фігура B']].map(([v, n]) => `<button class="chip-b ${S.eq.body === v ? 'on' : ''}" data-act="news-body" data-v="${v}">${n}</button>`).join('')}</div>`;
+  root.innerHTML = `<div class="ov news">
+    <div class="ov-kicker">Оновлення</div>
+    <div class="lvup-title sm">RESPAWN 2.0</div>
+    <div class="lvup-stage">${cv(() => stage('news', S.eq, { w: 120, h: 96, floor: 14 }).cv)}<div class="scan"></div></div>
+    <div class="news-list">
+      <div class="news-row">${icon('hex')}<div><b>6 сфер замість 5</b><small>Математика й Інженерія тепер — <b>Розум</b>, Дисципліна — <b>Порядок</b>. Нові сфери: <b>Спокій</b> і <b>Люди</b>. Твій XP і квести на місці.</small></div></div>
+      <div class="news-row">${icon('shirt')}<div><b>+52 скіни, 2 фігури, образи</b><small>${got.length ? `За рівні твоїх сфер уже відкрито ${got.length} ${plural(got.length, 'скін', 'скіни', 'скінів')} — вони в Шафці:` : 'Нові речі — у магазині та за рівні сфер.'}</small>${thumbs ? `<div class="news-its">${thumbs}</div>` : ''}</div></div>
+      <div class="news-row">${icon('cash')}<div><b>Гроші, Фокус і Зал — у «Сферах»</b><small>Бос місяця лишився на Базі. Непотрібні модулі вимикаються в Профілі.</small></div></div>
+    </div>
+    <div class="ob-g"><span>Як до тебе звертатись?</span>${gChips}</div>
+    <div class="ob-g"><span>Фігура</span>${bChips}</div>
+    <button class="btn next big" data-act="news-ok">Погнали</button>
   </div>`;
   hydrate(root);
 }
@@ -549,7 +602,19 @@ const A = {
   ver: (el, e) => { if (++ui.verTaps >= 7 && G.secret('dev')) { sfx('level'); react({ x: e.clientX, y: e.clientY }); } else if (ui.verTaps < 7) sfx('tap'); },
   'sheet-close': () => closeSheet(),
   'overlay-next': () => { sfx('tap'); nextOverlay(); render(); },
-  onboard: () => { S.name = $('#ob-name').value.trim() || S.name; S.onboarded = true; G.save(); sfx('buy'); buzz('medium'); nextOverlay(); G.timeSecrets(); react({ x: innerWidth / 2, y: innerHeight / 3 }); },
+  'ob-next': () => { const nm = $('#ob-name'); if (nm) S.name = nm.value.trim() || S.name; G.save(true); OB.step = Math.min(2, OB.step + 1); sfx('tap'); buzz('light'); obRender(); },
+  'ob-back': () => { OB.step = Math.max(0, OB.step - 1); sfx('tap'); obRender(); },
+  'ob-eq': el => { const { slot, v } = el.dataset; S.eq[slot] = v; S.manual[slot] = true; G.save(true); sfx('tap'); buzz('light'); obRender(); stage('intro', S.eq, { w: 120, h: 96, floor: 14 }).st.jump(); },
+  'ob-q': el => { const k = el.dataset.k; if (OB.q.has(k)) OB.q.delete(k); else OB.q.add(k); sfx('tap'); obRender(); },
+  'ob-mod': el => { S.mods[el.dataset.k] = !S.mods[el.dataset.k]; G.save(true); sfx('tap'); obRender(); },
+  onboard: () => {
+    const picked = [...OB.q].map(k => { const [id, i] = k.split(':'), [title, diff, type] = SPHERE_QUESTS[id][+i]; return [title, id, diff, type]; });
+    if (picked.length) G.setStarterQuests(picked);
+    S.onboarded = true; S.seen.v2 = 1; G.save(); sfx('buy'); buzz('medium'); nextOverlay(); G.timeSecrets(); react({ x: innerWidth / 2, y: innerHeight / 3 });
+  },
+  'news-g': el => { G.setGender(el.dataset.v); el.parentElement.querySelectorAll('.chip-b').forEach(b => b.classList.toggle('on', b === el)); sfx('tap'); buzz('light'); },
+  'news-body': el => { G.equip('body', el.dataset.v); el.parentElement.querySelectorAll('.chip-b').forEach(b => b.classList.toggle('on', b === el)); stage('news', S.eq, { w: 120, h: 96, floor: 14 }).st.jump(); sfx('tap'); buzz('light'); },
+  'news-ok': () => { S.seen.v2 = 1; G.save(); sfx('buy'); buzz('medium'); nextOverlay(); react({ x: innerWidth / 2, y: innerHeight / 3 }); },
 
   'hero-tap': (el, e) => {
     stages.home?.st.jump(); G.tapHero(); sfx('tap'); buzz('light');
@@ -667,7 +732,8 @@ const A = {
       ${hide ? '' : `<div class="xp-bar slim"><i style="width:${Math.min(100, (cur / goal) * 100)}%"></i></div><div class="xp-meta"><span>${fmt(Math.min(cur, goal))} / ${fmt(goal)}</span><span>${on ? 'Отримано' : ''}</span></div>`}
       <div class="loot-list"><div class="loot-row">${icon('coin')}<span>+${a.coins} монет</span></div>${item ? `<div class="loot-row rar-${item.rar}">${icon('star')}<span>Скін «${hide ? '???' : item.name}»</span><small>${RAR[item.rar]}</small></div>` : ''}</div>`);
   },
-  'ob-g': el => { G.setGender(el.dataset.v); if (!S.manual.body) { S.eq.body = el.dataset.v === 'f' ? 'b' : 'a'; if (!S.manual.hair) S.eq.hair = el.dataset.v === 'f' ? 'ponytail' : 'messy'; G.save(); stage('intro', S.eq, { w: 120, h: 96, floor: 14 }).st.jump(); } el.parentElement.querySelectorAll('.chip-b').forEach(b => b.classList.toggle('on', b === el)); sfx('tap'); buzz('light'); },
+  'ob-g': el => { const nm = $('#ob-name'); if (nm) S.name = nm.value.trim() || S.name; G.setGender(el.dataset.v); if (!S.manual.body) { S.eq.body = el.dataset.v === 'f' ? 'b' : 'a'; if (!S.manual.hair) S.eq.hair = el.dataset.v === 'f' ? 'ponytail' : 'messy'; G.save(); stage('intro', S.eq, { w: 120, h: 96, floor: 14 }).st.jump(); } el.parentElement.querySelectorAll('.chip-b').forEach(b => b.classList.toggle('on', b === el)); sfx('tap'); buzz('light'); },
+  'mod-toggle': el => { S.mods[el.dataset.k] = !S.mods[el.dataset.k]; G.save(); sfx('tap'); buzz('light'); },
   'set-g': el => { G.setGender(el.dataset.v); sfx('tap'); buzz('light'); },
   'set-toggle-opt': el => { S.settings[el.dataset.k] = !S.settings[el.dataset.k]; G.save(); sfx('tap'); buzz('light'); },
   'set-rest': el => { S.settings.rest = +el.dataset.v; G.save(); },
@@ -720,7 +786,8 @@ if (tg) {
 G.onChange(render);
 render(); enter();
 if (!S.onboarded) overlay(onboarding);
-G.syncCloud().then(changed => { if (changed && S.onboarded) nextOverlay(); });
+else if (!S.seen?.v2) overlay(whatsNew);
+G.syncCloud().then(changed => { if (changed && S.onboarded) { nextOverlay(); if (!S.seen?.v2) overlay(whatsNew); } });
 if ('serviceWorker' in navigator && location.protocol === 'https:') navigator.serviceWorker.register('sw.js').catch(() => {});
 
 if (/^(localhost|127\.0\.0\.1)$/.test(location.hostname) && location.search.includes('dev')) {
