@@ -9,6 +9,7 @@ export function tint(hex, f) {
   const [r, g, b] = h2r(hex);
   return f >= 0 ? r2h(r + (255 - r) * f, g + (255 - g) * f, b + (255 - b) * f) : r2h(r * (1 + f), g * (1 + f), b * (1 + f));
 }
+const mix = (a, b, t = 0.5) => { const A = h2r(a), Z = h2r(b); return r2h(...A.map((v, i) => v + (Z[i] - v) * t)); };
 // material: base / highlight / shade / deep shade
 const M = c => ({ b: c, h: tint(c, 0.25), s: tint(c, -0.25), d: tint(c, -0.5) });
 
@@ -16,6 +17,7 @@ export const SKIN = { s1: '#f3cfae', s2: '#e0ac84', s3: '#b47b52', s4: '#7b4f34'
 export const HAIRC = {
   black: '#2a2a35', brown: '#5c3d26', blond: '#e6c66e', white: '#ececf4',
   red: '#c8402f', teal: '#22c4a4', pink: '#f272ad', blue: '#4a78f5',
+  copper: '#c0602a', ash: '#9c9890', lavender: '#b49be0',
 };
 
 const C = {
@@ -203,9 +205,68 @@ const HAIRS = {
     B.rect(28, y - 1, 5, 1, H.h);
   },
   bald() {},
+  // ---- 2.0 ----
+  bob(K) { // каре: straight fringe, sides to the jaw
+    const { B, G, H } = K, y = G.hy;
+    B.rect(25, y - 2, 14, 4, H.b); B.clr(25, y - 2); B.clr(38, y - 2); B.rect(26, y - 3, 12, 1, H.b);
+    B.rect(25, y + 2, 14, 2, H.b); B.px(28, y + 3, H.s); B.px(33, y + 3, H.s);
+    B.rect(23, y + 1, 3, 10, H.b); B.rect(38, y + 1, 3, 10, H.s); B.rect(24, y - 1, 1, 2, H.b); B.rect(39, y - 1, 1, 2, H.s);
+    B.rect(23, y + 11, 2, 1, H.s); B.rect(39, y + 11, 2, 1, H.d); B.rect(23, y + 3, 1, 6, H.h);
+    B.rect(27, y - 2, 6, 1, H.h); B.px(26, y, H.h);
+  },
+  ponytail(K) { sleekTop(K); K.B.rect(39, K.G.hy - 1, 2, 2, '#d8323c'); K.B.px(39, K.G.hy - 1, '#ff6b76'); },
+  braid(K) { // коса over the right shoulder
+    const { B, G, H } = K, y = G.hy;
+    sleekTop(K);
+    for (let i = 0; i < 6; i++) { const x = 38 + (i % 2), yy = y + 4 + i * 3; B.rect(x, yy, 3, 3, H.b); B.px(x, yy, H.h); B.rect(x + 2, yy, 1, 3, H.s); B.rect(x, yy + 2, 3, 1, H.s); }
+    B.rect(39, y + 22, 2, 1, '#d8323c'); B.rect(39, y + 23, 2, 2, H.b); B.px(40, y + 24, H.s);
+  },
+  bun(K) { sleekTop(K); const { B, G, H } = K, y = G.hy; B.rect(29, y - 7, 6, 4, H.b); B.rect(30, y - 8, 4, 1, H.b); B.rect(33, y - 7, 2, 4, H.s); B.px(30, y - 7, H.h); B.px(31, y - 6, H.h); B.rect(29, y - 3, 6, 1, H.d); },
+  space_buns(K) {
+    sleekTop(K); const { B, G, H } = K, y = G.hy;
+    for (const x of [23, 37]) { B.rect(x, y - 6, 4, 4, H.b); B.rect(x + 1, y - 7, 2, 1, H.b); B.rect(x + 3, y - 6, 1, 4, H.s); B.px(x + 1, y - 6, H.h); }
+  },
+  pixie(K) {
+    const { B, G, H } = K, y = G.hy;
+    B.rect(25, y - 2, 14, 4, H.b); B.clr(25, y - 2); B.clr(38, y - 2); B.rect(27, y - 3, 10, 1, H.b);
+    B.rect(25, y + 2, 9, 1, H.b); B.rect(25, y + 3, 6, 1, H.b); B.rect(25, y + 4, 3, 1, H.b); B.rect(36, y + 2, 3, 2, H.s);
+    hairSides(K, 4); B.rect(29, y - 2, 6, 1, H.h); B.px(28, y - 1, H.h); B.rect(36, y - 2, 2, 3, H.s); B.px(30, y + 3, H.s);
+  },
+  curtain(K) { // чубчик-шторки, length to the chin
+    const { B, G, H } = K, y = G.hy;
+    B.rect(25, y - 2, 14, 4, H.b); B.clr(25, y - 2); B.clr(38, y - 2); B.rect(26, y - 3, 12, 1, H.b);
+    B.rect(26, y + 2, 5, 1, H.b); B.rect(26, y + 3, 3, 1, H.b); B.px(26, y + 4, H.b);
+    B.rect(33, y + 2, 5, 1, H.s); B.rect(35, y + 3, 3, 1, H.s); B.px(37, y + 4, H.s);
+    B.rect(23, y + 1, 2, 12, H.b); B.rect(39, y + 1, 2, 12, H.s); B.px(25, y + 5, H.b); B.px(38, y + 5, H.s);
+    B.rect(24, y - 1, 1, 2, H.b); B.rect(39, y - 1, 1, 2, H.s); B.px(31, y - 2, H.s); B.px(32, y - 1, H.s);
+    B.rect(27, y - 2, 3, 1, H.h); B.rect(34, y - 2, 2, 1, H.h); B.rect(23, y + 4, 1, 5, H.h);
+  },
+  waves(K) { // довгі хвилі
+    const { B, G, H } = K, y = G.hy;
+    B.rect(25, y - 2, 14, 4, H.b); B.clr(25, y - 2); B.clr(38, y - 2); B.rect(26, y - 3, 12, 1, H.b);
+    B.rect(25, y + 2, 4, 2, H.b); B.rect(35, y + 2, 4, 2, H.s); B.px(29, y + 2, H.b); B.px(25, y + 4, H.b);
+    for (let r = 0; r < 18; r++) { const o = [0, 0, 1, 1, 0, -1, -1, 0][r % 8]; B.rect(23 + o, y + 1 + r, 2, 1, H.b); B.rect(39 - o, y + 1 + r, 2, 1, H.s); }
+    B.rect(24, y - 1, 1, 3, H.b); B.rect(39, y - 1, 1, 3, H.s);
+    B.px(23, y + 4, H.h); B.px(24, y + 11, H.h); B.px(23, y + 15, H.h); B.rect(28, y - 2, 4, 1, H.h); B.px(27, y - 1, H.h);
+  },
 };
+// smooth top for tied-back styles (хвіст, коса, пучки)
+function sleekTop(K) {
+  const { B, G, H } = K, y = G.hy;
+  B.rect(25, y - 2, 14, 4, H.b); B.clr(25, y - 2); B.clr(38, y - 2); B.rect(26, y - 3, 12, 1, H.b);
+  B.rect(25, y + 2, 3, 2, H.b); B.rect(36, y + 2, 3, 2, H.s); B.px(25, y + 4, H.b); B.px(38, y + 4, H.s);
+  B.px(31, y - 2, H.s); B.px(31, y - 1, H.s);
+  B.rect(27, y - 2, 3, 1, H.h); B.px(28, y - 1, H.h); B.rect(34, y - 2, 2, 1, H.h);
+}
 const HAIR_BACK = {
   long(K) { const { B, G, H } = K; B.rect(24, G.hy + 8, 16, 8, H.d); },
+  waves(K) { const { B, G, H } = K; B.rect(24, G.hy + 8, 16, 11, H.d); },
+  curtain(K) { const { B, G, H } = K; B.rect(24, G.hy + 8, 16, 5, H.d); },
+  ponytail(K) { // the tail hangs behind the head, right side
+    const { B, G, H } = K, y = G.hy;
+    B.rect(39, y, 3, 3, H.b); B.rect(40, y + 3, 3, 8, H.b); B.rect(42, y + 3, 1, 8, H.s); B.rect(41, y + 11, 2, 3, H.s); B.px(42, y + 14, H.d);
+    B.px(40, y + 5, H.h); B.px(40, y + 8, H.h);
+  },
 };
 
 /* ---------- face accessories ---------- */
@@ -248,6 +309,33 @@ const FACES = {
     B.rect(26, y, 12, 4, m.b); B.rect(27, y + 4, 10, 1, m.s); B.rect(36, y, 2, 4, m.s);
     B.rect(27, y + 2, 9, 1, m.h); B.px(25, y, m.d); B.px(38, y, m.d); B.px(25, y - 1, m.d); B.px(38, y - 1, m.d);
   },
+};
+
+/* ---------- face details (2.0): drawn right after the head, under hair & glasses ---------- */
+const DETAILS = {
+  stubble(K) {
+    const { B, G, S, H } = K, y = G.hy, c = mix(S.s, H.d, 0.55);
+    for (let x = 27; x <= 36; x += 2) B.px(x, y + 11, c);
+    for (let x = 28; x <= 35; x += 2) B.px(x, y + 12, c);
+    B.pts([[26, y + 10], [37, y + 10], [29, y + 9], [34, y + 9]], c);
+  },
+  beard(K) {
+    const { B, G, S, H } = K, y = G.hy, my = y + 10;
+    B.rect(25, y + 5, 1, 4, H.b); B.rect(38, y + 5, 1, 4, H.s);
+    B.rect(25, y + 9, 14, 3, H.b); B.rect(26, y + 12, 12, 1, H.b); B.rect(28, y + 13, 8, 1, H.s); B.rect(36, y + 9, 3, 3, H.s);
+    B.rect(29, y + 9, 6, 1, H.d); B.rect(CX - 2, my, 4, 1, S.d); B.px(CX - 1, my + 1, S.s); B.px(CX, my + 1, S.s);
+    B.px(27, y + 10, H.h); B.px(30, y + 12, H.h);
+  },
+  mustache(K) { const { B, G, H } = K, y = G.hy; B.rect(29, y + 9, 6, 1, H.b); B.px(28, y + 10, H.b); B.px(35, y + 10, H.s); B.px(30, y + 9, H.h); },
+  freckles(K) { const { B, G, S } = K, y = G.hy, c = mix(S.b, '#8a4a2a', 0.45); B.pts([[27, y + 8], [29, y + 8], [28, y + 9], [30, y + 9], [33, y + 9], [35, y + 8], [34, y + 8], [36, y + 9]], c); },
+  blush(K) { const { B, G, S } = K, y = G.hy, c = mix(S.b, '#ff5f8f', 0.45); B.rect(26, y + 8, 2, 1, c); B.rect(36, y + 8, 2, 1, c); },
+  lipstick(K) {
+    const { B, G, look } = K, my = G.hy + 10, L = '#c8323f', e = look.expr || 0;
+    if (e === 0) B.rect(CX - 1, my, 2, 1, L);
+    else { B.rect(CX - 2, my, 4, 1, L); B.px(CX + 2, my - 1, L); if (e === 1) B.px(CX - 3, my - 1, L); }
+    B.px(CX - 1, my, '#ff7a86');
+  },
+  piercing(K) { const { B, G } = K, y = G.hy; B.px(CX + 1, y + 9, '#e2e4ee'); B.px(24, y + 7, '#ffd84a'); B.px(39, y + 7, '#ffd84a'); },
 };
 
 /* ---------- head accessories ---------- */
@@ -333,9 +421,40 @@ const HEADS = {
     for (let r = 0; r < 4; r++) B.sym(25 + (r > 1 ? 0 : 1) , y - 6 + r, 1 + r, 1, m.b, m.s);
     B.sym(26, y - 3, 2, 1, '#f08ab0'); B.sym(26, y - 4, 1, 1, '#f08ab0');
   },
+  // ---- 2.0 ----
+  headband(K) { const { B, G } = K, y = G.hy, m = M('#f272ad'); B.rect(26, y - 3, 12, 1, m.h); B.rect(25, y - 2, 14, 1, m.b); B.px(24, y - 1, m.b); B.px(39, y - 1, m.s); B.rect(35, y - 2, 4, 1, m.s); },
+  bow(K) {
+    const { B, G } = K, y = G.hy, m = M('#d8323c');
+    B.rect(33, y - 5, 3, 4, m.b); B.rect(38, y - 5, 3, 4, m.s); B.rect(36, y - 4, 2, 2, m.d); B.px(33, y - 5, m.h); B.px(34, y - 4, m.h);
+    B.px(35, y - 1, m.s); B.px(39, y - 1, m.d);
+  },
+  panama(K) { // bucket hat
+    const { B, G } = K, y = G.hy, m = M('#d8c9a3');
+    clearAbove(K, 2);
+    B.rect(25, y - 4, 14, 5, m.b); B.clr(25, y - 4); B.clr(38, y - 4); B.rect(36, y - 4, 3, 5, m.s); B.rect(27, y - 4, 5, 1, m.h);
+    B.rect(25, y, 14, 1, '#6b5a3a');
+    B.rect(23, y + 1, 18, 1, m.b); B.rect(22, y + 2, 20, 1, m.s); B.rect(23, y + 1, 4, 1, m.h);
+  },
 };
 
 /* ---------- tops ---------- */
+// sports top: band over the chest, bare arms & stomach (also what «Аполлон» shows on figure B)
+function sportsTop(K, m) {
+  const { B, G, S } = K, y = G.ty;
+  torso(K, S); arms(K, S, 0);
+  for (let r = 2; r < 8; r++) { const w = thw(G, r); B.rect(CX - w, y + r, w * 2, 1, r === 7 ? m.s : m.b); B.px(CX - w, y + r, m.h); B.px(CX + w - 1, y + r, m.d); }
+  B.rect(CX - 3, y, 1, 2, m.b); B.rect(CX + 2, y, 1, 2, m.s); B.rect(CX - 1, y + 2, 2, 1, S.s);
+  B.rect(CX - 1, y + 9, 1, 5, S.s); if (G.build >= 2) for (const r of [10, 12]) { B.px(CX - 2, y + r, S.s); B.px(CX + 1, y + r, S.s); }
+}
+// one-piece tops that also cover the hips: the bottom slot is skipped and bare legs are drawn instead
+export const FULL_TOPS = new Set(['dress', 'gown']);
+function aSkirt(K, m, len, flare) { // A-line skirt from the waist (y 43) down `len` rows
+  const { B } = K;
+  for (let r = 0; r < len; r++) {
+    const hw = 6 + Math.round((r / Math.max(1, len - 1)) * flare), y = 43 + r;
+    B.rect(CX - hw, y, hw * 2, 1, r === len - 1 ? m.s : m.b); B.px(CX - hw, y, m.h); B.rect(CX + hw - 2, y, 2, 1, m.s);
+  }
+}
 const TOPS = {
   tee_gray(K) { const { B, G, S } = K; torso(K, C.gray); arms(K, C.gray, 5); B.rect(CX - 2, G.ty, 4, 1, S.s); },
   tee_black(K) {
@@ -471,16 +590,66 @@ const TOPS = {
     for (const r of [7, 11]) { const hw = thw(G, r); B.rect(CX - hw, y + r, hw * 2, 1, tape); }
     B.rect(CX - 4, y, 1, 7, tape); B.rect(CX + 3, y, 1, 7, tape);
   },
+  // ---- 2.0 ----
+  crop(K) {
+    const { B, G, S } = K, m = M('#b48cff'), y = G.ty;
+    torso(K, S); arms(K, m, 5);
+    for (let r = 0; r < 10; r++) { const hw = thw(G, r); B.rect(CX - hw, y + r, hw * 2, 1, r === 9 ? m.s : m.b); B.px(CX - hw, y + r, m.h); B.rect(CX + hw - 2, y + r, 2, 1, m.s); }
+    B.rect(CX - 2, y, 4, 1, S.s); B.px(CX, y + 13, S.s); B.rect(CX - 3, y + 4, 2, 1, m.h);
+  },
+  sport_bra(K) { sportsTop(K, M('#22c4a4')); },
+  sweater(K) { // oversize knit: no waist, longer hem, sleeves over the hands
+    const { B, G, S } = K, m = M('#e3d2b4'), y = G.ty;
+    for (let r = 0; r < 18; r++) { const yy = y + r, hw = G.tw; B.rect(CX - hw, yy, hw * 2, 1, r >= 16 ? m.s : m.b); B.px(CX - hw, yy, m.h); B.rect(CX + hw - 2, yy, 2, 1, m.s); }
+    arms(K, m, 15);
+    B.rect(CX - 3, y - 1, 6, 1, m.h); B.rect(CX - 2, y, 4, 1, S.s);
+    for (let r = 3; r < 15; r += 3) for (let x = CX - G.tw + 2; x < CX + G.tw - 2; x += 3) B.px(x + (r % 2), y + r, m.s);
+    B.rect(CX - G.tw, y + 17, G.tw * 2, 1, m.d);
+  },
+  blouse(K) {
+    const { B, G, S } = K, m = M('#f2f0ec'), y = G.ty;
+    torso(K, m); arms(K, m, 13);
+    B.rect(CX, y + 3, 1, 13, m.s); B.rect(CX - 1, y, 2, 2, S.b); B.px(CX, y + 2, S.s);
+    B.pts([[CX - 4, y], [CX - 3, y], [CX - 3, y + 1], [CX - 2, y + 2]], m.s); B.pts([[CX + 3, y], [CX + 2, y], [CX + 2, y + 1], [CX + 1, y + 2]], m.d);
+    for (const r of [4, 7, 10, 13]) B.px(CX, y + r, '#b9b3a6');
+  },
+  cardigan(K) {
+    const { B, G, S } = K, m = M('#7d9b84'), t = C.white, y = G.ty;
+    torso(K, m); arms(K, m, 14);
+    B.rect(CX - 2, y, 4, 16, t.b); B.rect(CX + 1, y, 1, 16, t.s); B.rect(CX - 1, y, 2, 1, S.s);
+    B.rect(CX - 3, y, 1, 16, m.s); B.rect(CX + 2, y, 1, 16, m.d);
+    for (const r of [3, 7, 11]) B.px(CX - 3, y + r, '#e6dcc6');
+    const hw = thw(G, 15); B.rect(CX - hw, y + 14, hw - 3, 2, m.s); B.rect(CX + 3, y + 14, hw - 3, 2, m.d);
+  },
+  denim(K) {
+    const { B, G } = K, m = C.denim, y = G.ty;
+    torso(K, m); arms(K, m, 14);
+    B.rect(CX - 2, y, 4, 16, '#22222a'); B.rect(CX - 3, y, 1, 16, m.s); B.rect(CX + 2, y, 1, 16, m.d);
+    B.sym(CX - 5, y - 1, 3, 2, m.h, m.b); B.sym(CX - 5, y + 3, 2, 2, m.s, m.d); B.sym(CX - 5, y + 3, 2, 1, m.h, m.s);
+    for (const r of [6, 10]) B.px(CX - 3, y + r, '#c9c9d2');
+    const hw = thw(G, 15); B.rect(CX - hw, y + 14, hw * 2, 2, m.s); B.rect(CX - hw, y + 15, hw * 2, 1, m.d);
+  },
+  dress(K) { // sundress (full: hides the bottom)
+    const { B, G, S } = K, m = M('#e0526a'), y = G.ty;
+    torso(K, m); arms(K, S, 0);
+    for (let r = 0; r < 3; r++) { const hw = thw(G, r); B.rect(CX - hw, y + r, hw * 2, 1, S.b); }
+    B.rect(CX - 4, y, 1, 3, m.b); B.rect(CX + 3, y, 1, 3, m.s); B.rect(CX - 4, y + 3, 8, 1, m.h);
+    const hb = thw(G, 10); B.rect(CX - hb, y + 10, hb * 2, 1, '#f4f4f8');
+    aSkirt(K, m, 10, 3);
+    for (const [dx, dy] of [[-4, 46], [1, 45], [4, 48], [-2, 50], [3, 51], [-6, 49]]) B.px(CX + dx, dy, '#ffd0d8');
+  },
+  gown(K) { // evening gown, floor length
+    const { B, G, S } = K, m = M('#3a1f5c'), y = G.ty;
+    torso(K, m); arms(K, S, 0);
+    for (let r = 0; r < 3; r++) { const hw = thw(G, r); B.rect(CX - hw, y + r, hw * 2, 1, S.b); }
+    B.pts([[CX - 2, y], [CX - 1, y + 1], [CX + 1, y], [CX, y + 1]], m.b); B.rect(CX - 3, y + 2, 6, 1, m.h);
+    aSkirt(K, m, 18, 4);
+    for (const [dx, dy] of [[-3, 31], [2, 34], [-1, 38], [3, 45], [-4, 49], [1, 52], [5, 55], [-2, 57]]) B.px(CX + dx, dy + (dy < 43 ? G.bob : 0), '#ffe27a');
+  },
   shirtless(K) {
     const { B, G, S } = K, y = G.ty, hw = G.tw;
     torso(K, S); arms(K, S, 0);
-    if (G.body === 'b') { // body B: sports top + toned stomach instead of a bare chest
-      const m = C.black;
-      for (let r = 2; r < 8; r++) { const w = thw(G, r); B.rect(CX - w, y + r, w * 2, 1, r === 7 ? m.s : m.b); B.px(CX - w, y + r, m.h); B.px(CX + w - 1, y + r, m.d); }
-      B.rect(CX - 3, y, 1, 2, m.b); B.rect(CX + 2, y, 1, 2, m.s); B.rect(CX - 1, y + 2, 2, 1, S.s);
-      B.rect(CX - 1, y + 9, 1, 5, S.s); if (G.build >= 2) for (const r of [10, 12]) { B.px(CX - 2, y + r, S.s); B.px(CX + 1, y + r, S.s); }
-      return;
-    }
+    if (G.body === 'b') { sportsTop(K, C.black); return; } // body B: sports top + toned stomach instead of a bare chest
     B.rect(CX - hw + 1, y + 5, hw - 2, 1, S.s); B.rect(CX + 1, y + 5, hw - 2, 1, S.d);
     B.rect(CX - 1, y + 1, 2, 4, S.s); B.px(CX - 3, y + 2, S.h); B.px(CX - 4, y + 2, S.h);
     for (const r of [8, 10, 12]) { B.px(CX - 2, y + r, S.s); B.px(CX + 1, y + r, S.s); }
@@ -499,6 +668,20 @@ const BOTTOMS = {
   track_pants(K) { const { B } = K, L = legs(K, C.black, 'slim'); B.rect(L.xL, 44, 1, 15, '#f4f4f8'); B.rect(L.xR + 4, 44, 1, 15, '#c9c9d2'); },
   cyber_legs(K) { const { B } = K, m = C.steel, L = legs(K, m, 'slim'); for (const x of [L.xL, L.xR]) { B.rect(x, 49, 5, 3, m.h); B.rect(x + 1, 50, 3, 1, NEON); B.rect(x + 2, 54, 1, 4, '#1aa7c0'); } },
   gold_legs(K) { const { B } = K, m = C.gold, L = legs(K, m, 'slim'); for (const x of [L.xL, L.xR]) { B.rect(x, 49, 5, 3, m.h); B.rect(x, 51, 5, 1, m.d); B.rect(x, 55, 5, 1, m.d); } B.rect(L.xL, 43, 12, 1, m.d); B.rect(CX - 1, 44, 2, 2, '#e23b4e'); },
+  // ---- 2.0 ----
+  skirt(K) { const { B } = K, m = M('#2f3a66'); legs(K, K.S, 'slim'); aSkirt(K, m, 11, 3); for (const dx of [-4, -1, 2]) B.rect(CX + dx, 45, 1, 9, m.s); B.rect(CX - 6, 43, 12, 1, m.d); },
+  mini(K) { const { B } = K, m = C.black; legs(K, K.S, 'slim'); aSkirt(K, m, 6, 1); B.rect(CX - 6, 43, 12, 1, m.d); B.px(CX + 3, 44, '#c9c9d2'); },
+  leggings(K) { const { B } = K, m = M('#1c1c24'), L = legs(K, m, 'slim'); B.rect(L.xL, 44, 1, 15, m.h); B.rect(L.xR + L.lw - 1, 44, 1, 15, '#2c2c38'); },
+  bike(K) {
+    const { B, S } = K, m = M('#202028'), L = legs(K, m, 'slim');
+    for (const x of [L.xL, L.xR]) { B.rect(x, 50, L.lw, 9, S.b); B.rect(x + L.lw - 1, 50, 1, 9, S.s); B.rect(x, 49, L.lw, 1, m.s); }
+    B.rect(L.xL, 44, 1, 5, '#ff7ab0'); B.rect(L.xR + L.lw - 1, 44, 1, 5, '#c85a88');
+  },
+  flare(K) {
+    const { B } = K, m = M('#6f8fc4'), L = legs(K, m, 'slim');
+    B.rect(L.xL - 1, 54, 1, 5, m.b); B.rect(L.xR + L.lw, 54, 1, 5, m.s); B.rect(L.xL - 2, 57, 1, 2, m.b); B.rect(L.xR + L.lw + 1, 57, 1, 2, m.s);
+    B.rect(L.xL + 1, 47, 1, 6, m.h); B.rect(L.xR + 1, 47, 1, 6, m.h);
+  },
 };
 
 /* ---------- shoes ---------- */
@@ -508,6 +691,14 @@ const SHOES = {
   kicks_red: K => { shoes(K, M('#d8323c'), '#f4f4f8'); K.B.px(CX - K.lw, 60, '#fff'); K.B.px(CX + 3, 60, '#fff'); },
   kicks_neon: K => shoes(K, C.steel, NEON),
   gold_boots: K => shoes(K, C.gold, '#8a6a14', 2),
+  // ---- 2.0 ----
+  kedy: K => { shoes(K, M('#2b2b35'), '#f4f4f8', 1); const { B } = K; B.px(CX - K.lw, 59, '#f4f4f8'); B.px(CX + 3, 59, '#f4f4f8'); B.rect(CX - 2 - K.lw, 61, 2, 1, '#f4f4f8'); B.rect(CX + K.lw, 61, 2, 1, '#f4f4f8'); },
+  heels: K => { shoes(K, M('#b8262f'), '#5a0f15'); const { B } = K; B.clr(CX - K.lw + 1, 62); B.clr(CX + 2, 62); B.px(CX - K.lw, 60, '#ff7a86'); B.px(CX + 2, 60, '#ff7a86'); },
+  ankle: K => { shoes(K, M('#6b4a2b'), '#2a1a10', 2); const { B } = K; B.clr(CX - K.lw + 1, 62); B.clr(CX + 2, 62); B.rect(CX - 1 - K.lw, 57, K.lw, 1, '#8a6a4a'); B.rect(CX + 1, 57, K.lw, 1, '#5a3a20'); },
+  cowboy: K => {
+    shoes(K, M('#8a5a2b'), '#3a2412', 3); const { B } = K;
+    B.px(CX - 2 - K.lw, 61, '#8a5a2b'); B.px(CX + K.lw + 1, 61, '#6b4220'); B.rect(CX - K.lw, 57, 3, 1, '#c99a5a'); B.rect(CX + 2, 57, 3, 1, '#a07840');
+  },
 };
 
 /* ---------- back items (drawn first, behind the body) ---------- */
@@ -552,6 +743,26 @@ const BACKS = {
     B.sym(7, y - 6, 3, 14, '#1c1c22', '#141418'); B.sym(7, y - 6, 1, 14, '#3d3d48', '#26262e');
     B.sym(10, y - 4, 2, 10, '#b8262f', '#8a1c23'); B.sym(5, y - 1, 2, 4, '#a5a8b5', '#6d7080');
   },
+  // ---- 2.0 ----
+  backpack(K) { const { B, G } = K, m = M('#e2b33c'), y = G.ty - 3; B.rect(CX - 6, y, 12, 14, m.b); B.rect(CX - 6, y, 12, 1, m.h); B.rect(CX + 4, y, 2, 14, m.s); B.rect(CX - 1, y, 2, 2, '#6b4a2b'); },
+  guitar(K) {
+    const { B, G } = K, d = G.bob, wood = M('#c07a3a');
+    for (let t = 0; t < 26; t++) { const x = 17 + t, y = 9 + Math.round(t * 1.25) + d; B.px(x, y, '#5a3a20'); B.px(x + 1, y, '#3a2412'); }
+    B.rect(15, 6 + d, 3, 4, '#3a2412'); B.pts([[14, 7 + d], [14, 9 + d], [18, 7 + d]], '#d9dce8');
+    const cx = 44, cy = 44 + d;
+    for (let r = -6; r <= 6; r++) { const hw = Math.round(Math.sqrt(36 - r * r) * 1.1) + (r > 0 ? 1 : 0); B.rect(cx - hw, cy + r, hw * 2, 1, r < -3 ? wood.h : r > 3 ? wood.s : wood.b); }
+    B.rect(cx - 1, cy - 1, 3, 3, '#2a1a10'); B.rect(cx - 3, cy + 3, 6, 1, '#3a2412');
+  },
+  yoga_mat(K) {
+    const { B, G } = K, m = M('#8a5cd6'), y = G.ty - 9 + G.bob;
+    B.rect(39, y, 4, 22, m.b); B.rect(42, y, 1, 22, m.s); B.rect(39, y, 1, 22, m.h);
+    B.rect(39, y - 1, 4, 2, m.h); B.px(40, y, m.d); B.px(41, y - 1, m.s); B.rect(39, y + 6, 4, 1, '#2b2b35'); B.rect(39, y + 15, 4, 1, '#2b2b35');
+  },
+};
+// front parts of back items (straps), drawn over the top
+const BACK_FRONT = {
+  backpack(K) { const { B, G } = K, y = G.ty, s = '#6b4a2b'; for (const x of [CX - 4, CX + 2]) { B.rect(x, y, 2, 11, s); B.px(x, y + 7, '#e2b33c'); } },
+  guitar(K) { const { B, G } = K; for (let r = 0; r < 16; r++) B.px(CX - G.tw + 1 + Math.round(r * (2 * G.tw - 3) / 15), G.ty + r, '#3a2412'); },
 };
 
 /* ---------- held items (viewer's right hand) ---------- */
@@ -584,6 +795,25 @@ const HANDS = {
     B.rect(x, y, 5, 8, '#2b2b35'); B.rect(x + 4, y, 1, 8, '#1a1a22'); B.rect(x + 1, y + 1, 3, 2, '#9ff5a8');
     for (const r of [4, 6]) { B.px(x + 1, y + r, '#d9dce8'); B.px(x + 3, y + r, '#d9dce8'); }
     B.px(x + 3, y + 6, '#ff7a1a');
+  },
+  // ---- 2.0 ----
+  phone(K) { const { B, G } = K, x = CX + G.tw + G.aw - 1, y = G.ty + 12; B.rect(x, y, 3, 5, '#17171d'); B.rect(x, y + 1, 2, 3, '#7ecbff'); B.px(x, y + 1, '#e6f6ff'); },
+  matcha(K) {
+    const { B, G } = K, x = CX + G.tw + G.aw - 1, y = G.ty + 11;
+    B.rect(x, y + 1, 4, 6, '#d7ecdf'); B.rect(x, y + 3, 4, 4, '#7cc46a'); B.rect(x + 3, y + 3, 1, 4, '#5aa04c'); B.rect(x, y + 1, 4, 1, '#f4f4f8'); B.rect(x + 2, y - 2, 1, 3, '#f272ad');
+  },
+  book(K) { const { B, G } = K, x = CX + G.tw + G.aw - 2, y = G.ty + 10; B.rect(x, y, 5, 7, '#4a78f5'); B.rect(x, y, 1, 7, '#3559c0'); B.rect(x + 4, y + 1, 1, 5, '#f4f1e6'); B.rect(x + 1, y + 2, 2, 1, '#e2b33c'); },
+  handbag(K) {
+    const { B, G } = K, x = CX + G.tw - 2, y = G.ty + 16, m = M('#f272ad');
+    B.pts([[x + 1, y], [x + 2, y - 1], [x + 3, y - 1], [x + 4, y - 1], [x + 5, y]], m.d);
+    B.rect(x, y + 1, 7, 5, m.b); B.rect(x, y + 1, 7, 1, m.h); B.rect(x + 5, y + 1, 2, 5, m.s); B.px(x + 3, y + 3, '#ffd84a');
+  },
+  bouquet(K) {
+    const { B, G } = K, x = CX + G.tw + G.aw - 3, y = G.ty + 6;
+    B.rect(x + 2, y + 6, 1, 6, '#3ddc84'); B.rect(x + 3, y + 7, 1, 5, '#2a9a5a');
+    for (let r = 0; r < 5; r++) B.rect(x + 1 + Math.floor(r / 2), y + 8 + r, 4 - Math.floor(r / 2) * 2 + 1, 1, r === 4 ? '#d9d2c0' : '#f4f1e6');
+    B.pts([[x, y + 3], [x + 1, y + 2], [x + 2, y + 4]], '#ff4d5a'); B.pts([[x + 3, y + 1], [x + 4, y + 2], [x + 3, y + 3]], '#ffd84a'); B.pts([[x + 5, y + 4], [x + 4, y + 5], [x + 1, y + 5]], '#f29ab8');
+    B.pts([[x + 2, y + 1], [x + 5, y + 2], [x, y + 5]], '#ffffff');
   },
 };
 
@@ -634,7 +864,7 @@ function outline(B, color) {
 }
 
 /**
- * look: { body 'a'|'b', skin, hair, hairColor, face, head, top, bottom, shoes, back, build 0..3, expr 0..2, rim }
+ * look: { body 'a'|'b', skin, hair, hairColor, face, detail, head, top, bottom, shoes, back, build 0..3, expr 0..2, rim }
  * frame: { bob, blink }
  */
 export function compose(look, frame = {}) {
@@ -643,12 +873,15 @@ export function compose(look, frame = {}) {
   const K = { B, G, look, blink: !!frame.blink, lw: 6, S: M(SKIN[look.skin] || SKIN.s2), H: M(HAIRC[look.hairColor] || HAIRC.black) };
   BACKS[look.back]?.(K);
   HAIR_BACK[look.hair]?.(K);
-  (BOTTOMS[look.bottom] || BOTTOMS.jeans)(K);
+  if (FULL_TOPS.has(look.top)) legs(K, K.S, 'slim'); // dress: bare legs instead of the bottom slot
+  else (BOTTOMS[look.bottom] || BOTTOMS.jeans)(K);
   (SHOES[look.shoes] || SHOES.kicks_white)(K);
   B.rect(CX - 2, G.hy + 12, 4, 4, K.S.s);
   (TOPS[look.top] || TOPS.tee_gray)(K);
+  BACK_FRONT[look.back]?.(K);
   HANDS[look.hand]?.(K);
   head(K);
+  DETAILS[look.detail]?.(K);
   (HAIRS[look.hair] || HAIRS.messy)(K);
   FACES[look.face]?.(K);
   HEADS[look.head]?.(K);

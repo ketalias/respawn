@@ -1,5 +1,5 @@
 // RESPAWN — state, persistence (localStorage + Telegram CloudStorage) and game rules.
-import { levelInfo, rankOf, comboOf, DIFFS, STARTER_QUESTS, EXERCISES, GROUPS, ITEMS, ITEM, DEFAULT_EQ, ACHS, CATS, OLD_CATS, ALIAS, sphereOf, BIZ_ACTS, DEFAULT_SKILLS } from './data.js';
+import { attrLevel, sphereXP, levelInfo, rankOf, comboOf, DIFFS, STARTER_QUESTS, EXERCISES, GROUPS, ITEMS, ITEM, DEFAULT_EQ, ACHS, CATS, OLD_CATS, ALIAS, sphereOf, BIZ_ACTS, DEFAULT_SKILLS } from './data.js';
 
 const KEY = 'respawn.v1';
 const BAK = KEY + '.bak2'; // one-time copy of the pre-2.0 save, taken before this version first touches it
@@ -90,7 +90,7 @@ function backupOnce(json, raw) {
 export function load() {
   try { const json = localStorage.getItem(KEY), raw = JSON.parse(json); backupOnce(json, raw); S = hydrate(raw); } catch { S = fresh(); }
   if (!S.name && tg?.initDataUnsafe?.user?.first_name) S.name = tg.initDataUnsafe.user.first_name;
-  rollDay();
+  rollDay(); unlockSpheres(null, true); // rewards for sphere levels reached before 2.0 (shown in «Що нового»)
 }
 // pull a newer save from Telegram cloud (other device / cleared webview storage)
 export async function syncCloud() {
@@ -104,7 +104,7 @@ export async function syncCloud() {
     const chunks = keys.map(k => vals[k] || '');
     const json = chunks.join(''), raw = JSON.parse(json); backupOnce(json, raw);
     S = hydrate(raw); lastChunks = chunks;
-    rollDay(); writeLocal(); notify();
+    rollDay(); unlockSpheres(null, true); writeLocal(); notify();
     return true;
   } catch { return false; }
 }
@@ -112,7 +112,7 @@ export const exportSave = () => JSON.stringify(S);
 export function importSave(json) {
   const raw = JSON.parse(json);
   if (!raw || typeof raw.xp !== 'number' || !Array.isArray(raw.quests)) throw new Error('bad save');
-  S = hydrate(raw); rollDay(); save();
+  S = hydrate(raw); rollDay(); unlockSpheres(null, true); save();
 }
 export function resetAll() { const name = S.name; S = fresh(); S.name = name; lastChunks = []; save(); }
 
@@ -131,7 +131,7 @@ export function setGender(v) { S.profile.g = v === 'f' || v === 'm' ? v : null; 
 export const isDone = q => (q.type === 'daily' ? q.doneOn === today() : !!q.doneOn);
 export function lookOf(eq = S.eq) {
   const r = rank();
-  return { body: eq.body, skin: eq.skin, hair: eq.hair, hairColor: eq.hairColor, face: eq.face, head: eq.head, top: eq.top, bottom: eq.bottom, shoes: eq.shoes, back: eq.back, hand: eq.hand, build: r.build, expr: r.expr };
+  return { body: eq.body, detail: eq.detail, skin: eq.skin, hair: eq.hair, hairColor: eq.hairColor, face: eq.face, head: eq.head, top: eq.top, bottom: eq.bottom, shoes: eq.shoes, back: eq.back, hand: eq.hand, build: r.build, expr: r.expr };
 }
 export const allExercises = () => [...EXERCISES, ...S.customEx];
 export const exById = id => allExercises().find(e => e.id === id) || { id, name: 'Вправа', g: 0, type: 'w' };
@@ -176,6 +176,7 @@ function grant(xp, coins, cat) {
     const sp = sphereOf(cat);
     addStat(sp, xp);
     const ds = (d.s ||= {}); ds[sp] = Math.max(0, (ds[sp] || 0) + xp);
+    if (xp > 0) unlockSpheres(sp);
   }
   const after = level().lv;
   for (let lv = Math.max(before, S.maxLv) + 1; lv <= after; lv++) {
@@ -188,6 +189,15 @@ function grant(xp, coins, cat) {
   }
 }
 
+// sphere reward lines: items with src { sp, at } unlock when that sphere reaches LV `at` (never taken back)
+function unlockSpheres(only, silent) {
+  for (const it of ITEMS) {
+    const s = it.src; if (!s || !s.sp || (only && s.sp !== only) || S.owned.includes(it.id)) continue;
+    if (attrLevel(sphereXP(S.stats, s.sp)) < s.at) continue;
+    S.owned.push(it.id);
+    if (!silent) events.push({ t: 'sphere', sp: s.sp, at: s.at, item: it });
+  }
+}
 function checkAchs() {
   for (let pass = 0; pass < 3; pass++) {
     let any = false;

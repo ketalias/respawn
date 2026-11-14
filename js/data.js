@@ -138,16 +138,16 @@ export const EXERCISES = [
 /* ---------- items ---------- */
 export const SLOTS = [
   { id: 'body', name: 'Фігура' }, { id: 'hair', name: 'Зачіска' }, { id: 'hairColor', name: 'Колір' }, { id: 'skin', name: 'Шкіра' },
-  { id: 'face', name: 'Обличчя', opt: true }, { id: 'head', name: 'Голова', opt: true },
+  { id: 'face', name: 'Обличчя', opt: true }, { id: 'detail', name: 'Деталі', opt: true }, { id: 'head', name: 'Голова', opt: true },
   { id: 'top', name: 'Верх' }, { id: 'bottom', name: 'Низ' }, { id: 'shoes', name: 'Взуття' },
   { id: 'hand', name: 'В руці', opt: true }, { id: 'back', name: 'Спина', opt: true }, { id: 'pet', name: 'Пет', opt: true }, { id: 'aura', name: 'Аура', opt: true },
   { id: 'scene', name: 'Локація' }, { id: 'theme', name: 'Тема' },
 ];
 export const RAR = { c: 'Звичайний', r: 'Рідкісний', e: 'Епічний', l: 'Легендарний' };
 
-// src: 0 = стартовий, {lv} = нагорода за рівень, {coins} = магазин, {ach} = за ачівку
+// src: 0 = стартовий, {lv} = нагорода за рівень, {coins} = магазин, {ach} = за ачівку, {sp, at} = рівень сфери
 const I = (slot, key, name, src = 0, rar = 'c', extra = {}) => ({ id: `${slot}:${key}`, slot, key, name, src, rar, ...extra });
-const lv = n => ({ lv: n }), $ = n => ({ coins: n }), ach = id => ({ ach: id });
+const lv = n => ({ lv: n }), $ = n => ({ coins: n }), ach = id => ({ ach: id }), sp = (s, at) => ({ sp: s, at });
 
 export const ITEMS = [
   I('body', 'a', 'Фігура A'), I('body', 'b', 'Фігура B'),
@@ -156,10 +156,18 @@ export const ITEMS = [
   I('hair', 'curly', 'Кучері', $(60)), I('hair', 'spiky', 'Шипи', $(80), 'r'), I('hair', 'slick', 'Андеркат', $(80), 'r'),
   I('hair', 'long', 'Довге', $(100), 'r'), I('hair', 'knot', 'Самурай', $(120), 'r'), I('hair', 'mohawk', 'Ірокез', $(150), 'e'),
 
+  // 2.0: стартові зачіски для всіх + магазин
+  I('hair', 'bob', 'Каре'), I('hair', 'ponytail', 'Хвіст'), I('hair', 'braid', 'Коса'),
+  I('hair', 'bun', 'Пучок', $(60)), I('hair', 'pixie', 'Піксі', $(80), 'r'), I('hair', 'curtain', 'Шторки', $(80), 'r'),
+  I('hair', 'waves', 'Довгі хвилі', $(100), 'r'), I('hair', 'space_buns', 'Два пучки', $(120), 'r'),
+
   I('hairColor', 'black', 'Чорний', 0, 'c', { sw: '#2a2a35' }), I('hairColor', 'brown', 'Каштан', 0, 'c', { sw: '#5c3d26' }),
   I('hairColor', 'blond', 'Блонд', $(30), 'c', { sw: '#e6c66e' }), I('hairColor', 'red', 'Рудий', $(30), 'c', { sw: '#c8402f' }),
   I('hairColor', 'white', 'Срібло', $(60), 'r', { sw: '#ececf4' }), I('hairColor', 'teal', 'Кислота', $(60), 'r', { sw: '#22c4a4' }),
   I('hairColor', 'pink', 'Рожевий', $(60), 'r', { sw: '#f272ad' }), I('hairColor', 'blue', 'Синій', $(60), 'r', { sw: '#4a78f5' }),
+
+  I('hairColor', 'copper', 'Мідь', $(30), 'c', { sw: '#c0602a' }), I('hairColor', 'ash', 'Попелястий', $(60), 'r', { sw: '#9c9890' }),
+  I('hairColor', 'lavender', 'Лаванда', $(60), 'r', { sw: '#b49be0' }),
 
   I('skin', 's1', 'Тон 1', 0, 'c', { sw: '#f3cfae' }), I('skin', 's2', 'Тон 2', 0, 'c', { sw: '#e0ac84' }),
   I('skin', 's3', 'Тон 3', 0, 'c', { sw: '#b47b52' }), I('skin', 's4', 'Тон 4', 0, 'c', { sw: '#7b4f34' }),
@@ -167,10 +175,26 @@ export const ITEMS = [
   I('face', 'glasses', 'Окуляри'), I('face', 'mask', 'Маска', $(70), 'c'), I('face', 'shades_green', 'Зелені лінзи', lv(8), 'r'),
   I('face', 'shades_black', 'Deal with it', $(140), 'r'), I('face', 'monocle', 'Монокль', ach('over'), 'e'), I('face', 'visor', 'Візор', lv(25), 'e'),
 
+  // 2.0: деталі обличчя
+  I('detail', 'stubble', 'Щетина'), I('detail', 'freckles', 'Веснянки'), I('detail', 'mustache', 'Вуса', $(40)), I('detail', 'blush', 'Рум\'янець', $(30)),
+  I('detail', 'lipstick', 'Помада', $(50)), I('detail', 'beard', 'Борода', $(80)), I('detail', 'piercing', 'Пірсинг', $(90), 'r'),
+
   I('head', 'cap', 'Кепка', $(90), 'c'), I('head', 'beanie', 'Шапка', $(90), 'c'), I('head', 'bandana', 'Бандана', $(110), 'r'),
   I('head', 'phones', 'Навушники', $(160), 'r'), I('head', 'ears', 'Котячі вушка', ach('tap'), 'e'), I('head', 'horns', 'Роги', ach('st30'), 'e'),
   I('head', 'gradcap', 'Конфедератка', ach('dr100'), 'r'), I('head', 'hardhat', 'Каска інженера', ach('engh10'), 'r'), I('head', 'tophat', 'Циліндр', ach('ath'), 'e'),
   I('head', 'propeller', 'Кепка з пропелером', ach('s_dev'), 'e'), I('head', 'halo', 'Німб', lv(30), 'l'), I('head', 'crown', 'Корона', lv(50), 'l'),
+
+  // 2.0: нагороди сфер — LV 3 / 5 / 10 / 15 (Тіло, Розум, Гроші, Спокій, Люди, Порядок)
+  I('bottom', 'bike', 'Велосипедки', sp('body', 3)), I('top', 'sport_bra', 'Спортивний топ', sp('body', 5), 'r'), I('back', 'yoga_mat', 'Килимок для йоги', sp('body', 10), 'e'),
+  I('hand', 'book', 'Книга', sp('mind', 3)), I('top', 'cardigan', 'Кардиган', sp('mind', 5), 'r'), I('back', 'backpack', 'Рюкзак', sp('mind', 10), 'e'),
+  I('hand', 'phone', 'Телефон', sp('biz', 3)), I('shoes', 'heels', 'Туфлі', sp('biz', 5), 'r'), I('hand', 'handbag', 'Сумочка', sp('biz', 10), 'e'), I('top', 'gown', 'Вечірня сукня', sp('biz', 15), 'l', { full: true }),
+  I('hand', 'matcha', 'Матча', sp('calm', 3)), I('top', 'sweater', 'Светр оверсайз', sp('calm', 5), 'r'), I('head', 'panama', 'Панама', sp('calm', 10), 'e'),
+  I('hand', 'bouquet', 'Букет', sp('people', 3)), I('head', 'bow', 'Бант', sp('people', 5), 'r'), I('top', 'dress', 'Сукня', sp('people', 10), 'e', { full: true }),
+  I('head', 'headband', 'Обруч', sp('dis', 3)), I('top', 'blouse', 'Блузка', sp('dis', 5), 'r'), I('shoes', 'ankle', 'Ботильйони', sp('dis', 10), 'e'),
+  // 2.0: магазин
+  I('top', 'crop', 'Кроп-топ', $(120), 'r'), I('top', 'denim', 'Джинсова куртка', $(160), 'r'),
+  I('bottom', 'skirt', 'Спідниця', $(90)), I('bottom', 'mini', 'Міні', $(90)), I('bottom', 'leggings', 'Легінси', $(70)), I('bottom', 'flare', 'Кльош', $(110), 'r'),
+  I('shoes', 'kedy', 'Кеди', $(70)), I('shoes', 'cowboy', 'Ковбойські чоботи', $(150), 'r'), I('back', 'guitar', 'Гітара', $(260), 'e'),
 
   I('top', 'tee_gray', 'Сіра футболка'), I('top', 'tee_black', 'Чорна футболка', lv(2)), I('top', 'hoodie', 'Чорне худі', lv(3)),
   I('top', 'jacket', 'Куртка 2004', lv(6), 'r'), I('top', 'track', 'Спортивка', $(140), 'r'), I('top', 'varsity', 'Бомбер', $(180), 'r'),
@@ -217,7 +241,7 @@ export const THEMES = {
   cash: ['#4ade80', '#03140a'], blueprint: ['#5aa9ff', '#00101e'], amber: ['#ffb347', '#1a0e00'],
 };
 export const DEFAULT_EQ = {
-  body: 'a', hair: 'messy', hairColor: 'black', skin: 's2', face: 'glasses', head: null, top: 'tee_gray', bottom: 'jeans',
+  body: 'a', hair: 'messy', hairColor: 'black', skin: 's2', face: 'glasses', detail: null, head: null, top: 'tee_gray', bottom: 'jeans',
   shoes: 'kicks_white', hand: null, back: null, pet: null, aura: null, scene: 'room', theme: 'mono',
 };
 

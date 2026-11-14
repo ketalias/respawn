@@ -124,7 +124,25 @@ ok(old.eq.body === 'a' && G.lookOf(old.eq).body === 'a', 'old save → фігу�
 ok(G.has('body:a') && G.has('body:b'), 'both figures are free starters');
 G.equip('body', 'b'); ok(G.lookOf().body === 'b', 'switching to B reaches the sprite');
 
-/* ---------- 8. new player ---------- */
+/* ---------- 8. нагороди сфер ---------- */
+console.log('sphere rewards');
+const { ITEMS: ALL } = await import('../js/data.js');
+const v2s = load(v2); // Гроші LV 13, Розум LV 11, Тіло LV 5, Порядок LV 7, Спокій/Люди LV 1
+const got2 = id => v2s.owned.includes(id);
+ok(got2('hand:phone') && got2('shoes:heels') && got2('hand:handbag') && !got2('top:gown'), 'Гроші LV 13 → телефон, туфлі, сумочка (сукня лише на LV 15)');
+ok(got2('hand:book') && got2('top:cardigan') && got2('back:backpack'), 'Розум LV 11 → книга, кардиган, рюкзак');
+ok(got2('bottom:bike') && got2('top:sport_bra') && !got2('back:yoga_mat'), 'Тіло LV 5 → велосипедки, топ (килимок на LV 10)');
+ok(!got2('hand:matcha') && !got2('hand:bouquet'), 'Спокій / Люди LV 1 → ще нічого');
+ok(v2s.eq.top === 'suit' && v2s.eq.hand === undefined || v2s.eq.hand === null, 'rewards are never auto-equipped');
+ok(ALL.filter(i => i.src?.sp).every(i => i.src.at && !i.src.lv), 'sphere rewards never collide with level rewards');
+// earning a sphere level during play announces the reward
+load(v2); G.drain();
+for (let i = 0; i < 7; i++) G.addQuest({ title: 'calm ' + i, cat: 'calm', diff: 'x', type: 'once' });
+for (const q of G.S.quests.filter(q => q.cat === 'calm')) G.completeQuest(q.id);
+const ev = G.drain().filter(e => e.t === 'sphere');
+ok(ev.some(e => e.item.id === 'hand:matcha') && G.S.owned.includes('hand:matcha'), 'Спокій reaches LV 3 in play → «Матча» + event', ev.map(e => e.item.id).join());
+
+/* ---------- 9. new player ---------- */
 console.log('new player');
 const n = load(undefined);
 ok(Object.keys(n.stats).join() === Object.keys(CATS).join(), 'fresh stats = the 6 spheres');

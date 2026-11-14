@@ -32,7 +32,7 @@ function stage(name, eq = S.eq, opts) {
   return s;
 }
 const HEAD = [20, 2, 24, 26];
-const CROP = { body: [16, 8, 32, 56], hair: HEAD, hairColor: HEAD, skin: HEAD, face: HEAD, head: [18, 0, 28, 28], top: [14, 22, 36, 24], bottom: [19, 40, 26, 24], shoes: [19, 46, 26, 18], back: [2, 6, 60, 58], hand: [28, 30, 24, 24] };
+const CROP = { body: [16, 8, 32, 56], detail: HEAD, hair: HEAD, hairColor: HEAD, skin: HEAD, face: HEAD, head: [18, 0, 28, 28], top: [14, 22, 36, 24], bottom: [19, 40, 26, 24], shoes: [19, 46, 26, 18], back: [2, 6, 60, 58], hand: [28, 30, 24, 24] };
 
 function applyTheme() {
   const [a, ink] = THEMES[S.eq.theme] || THEMES.mono;
@@ -249,6 +249,7 @@ function spark(points) {
 /* ---------- LOCKER ---------- */
 function itemState(it) {
   if (G.has(it.id)) return { owned: true };
+  if (it.src.sp) return { sp: it.src.sp, at: it.src.at };
   if (it.src.coins) return { price: it.src.coins, ok: S.coins >= it.src.coins };
   if (it.src.lv) return { lv: it.src.lv };
   return { ach: ACH[it.src.ach] };
@@ -283,7 +284,7 @@ function locker() {
     ${t ? `<div class="tryon rar-${t.rar}">
         <div class="tryon-t"><small>Примірка · ${RAR[t.rar]}</small><b>${t.name}</b></div>
         ${st.price ? `<button class="btn solid" data-act="buy" data-id="${t.id}" ${st.ok ? '' : 'disabled'}>${icon('coin')}${st.price}${st.ok ? '' : ` · бракує ${st.price - S.coins}`}</button>`
-          : `<span class="tryon-lock">${icon('lock')}${st.lv ? `Відкриється на LV ${st.lv}` : `Ачівка «${st.ach.secret && !S.ach[st.ach.id] ? '???' : st.ach.name}»`}</span>`}
+          : `<span class="tryon-lock">${icon('lock')}${st.sp ? `Сфера «${CATS[st.sp].name}» LV ${st.at}` : st.lv ? `Відкриється на LV ${st.lv}` : `Ачівка «${st.ach.secret && !S.ach[st.ach.id] ? '???' : st.ach.name}»`}</span>`}
         <button class="icon-b" data-act="tryon-clear" aria-label="Зняти">${icon('x')}</button>
       </div>` : ''}
     <div class="chips scroll slots">${SLOTS.map(s => `<button class="chip-b sm ${s.id === ui.slot ? 'on' : ''}" data-act="slot" data-v="${s.id}">${s.name}</button>`).join('')}</div>
@@ -293,7 +294,7 @@ function locker() {
         const s = itemState(it), on = S.eq[it.slot] === it.key && s.owned;
         return `<button class="item rar-${it.rar} ${on ? 'on' : ''} ${s.owned ? '' : 'locked'} ${ui.tryOn === it.id ? 'try' : ''}" data-act="item" data-id="${it.id}">
           ${itemThumb(it)}<b>${it.name}</b>
-          <small>${s.owned ? (on ? 'одягнено' : 'маєш') : s.price ? `${icon('coin')}${s.price}` : s.lv ? `${icon('lock')}LV ${s.lv}` : `${icon('medal')}ачівка`}</small>
+          <small>${s.owned ? (on ? 'одягнено' : 'маєш') : s.sp ? `${icon(CATS[s.sp].icon)}LV ${s.at}` : s.price ? `${icon('coin')}${s.price}` : s.lv ? `${icon('lock')}LV ${s.lv}` : `${icon('medal')}ачівка`}</small>
         </button>`;
       }).join('')}
     </div>`;
@@ -427,6 +428,7 @@ function react(pt) {
       if (e.crit) { floatText(`КРИТ ×2 · +${e.xp} XP`, pt.x, pt.y - 10, 'crit'); confetti(pt.x, pt.y, 40, 9); sfx('pr'); buzz('heavy'); }
       else { floatText(`+${e.xp} XP`, pt.x, pt.y - 10); confetti(pt.x, pt.y, 14, 5); }
     }
+    if (e.t === 'sphere') { setTimeout(() => { toast(`${icon(CATS[e.sp].icon)}<div><b>${CATS[e.sp].name} · LV ${e.at}</b><small>Новий скін «${e.item.name}» — у Шафці</small></div>`, 'gold', 3800); sfx('ach'); }, 600 + delay); delay += 900; }
     if (e.t === 'boss') setTimeout(() => overlay(root => bossDown(root, e)), 300);
     if (e.t === 'ath') { setTimeout(() => { toast(`${icon('chart')}<div><b>Новий ATH</b><small>Це твій найкращий місяць</small></div>`, 'gold', 3400); rain(60); }, 400 + delay); delay += 600; }
     if (e.t === 'perfect') { setTimeout(() => { toast(`${icon('star')}<div><b>Ідеальний день</b><small>+${e.xp} XP · +${e.coins} монет</small></div>`, 'gold', 3200); rain(70); sfx('ach'); }, 350); delay += 500; }
@@ -656,7 +658,7 @@ const A = {
       ${hide ? '' : `<div class="xp-bar slim"><i style="width:${Math.min(100, (cur / goal) * 100)}%"></i></div><div class="xp-meta"><span>${fmt(Math.min(cur, goal))} / ${fmt(goal)}</span><span>${on ? 'Отримано' : ''}</span></div>`}
       <div class="loot-list"><div class="loot-row">${icon('coin')}<span>+${a.coins} монет</span></div>${item ? `<div class="loot-row rar-${item.rar}">${icon('star')}<span>Скін «${hide ? '???' : item.name}»</span><small>${RAR[item.rar]}</small></div>` : ''}</div>`);
   },
-  'ob-g': el => { G.setGender(el.dataset.v); if (!S.manual.body) { S.eq.body = el.dataset.v === 'f' ? 'b' : 'a'; G.save(); stage('intro', S.eq, { w: 120, h: 96, floor: 14 }).st.jump(); } el.parentElement.querySelectorAll('.chip-b').forEach(b => b.classList.toggle('on', b === el)); sfx('tap'); buzz('light'); },
+  'ob-g': el => { G.setGender(el.dataset.v); if (!S.manual.body) { S.eq.body = el.dataset.v === 'f' ? 'b' : 'a'; if (!S.manual.hair) S.eq.hair = el.dataset.v === 'f' ? 'ponytail' : 'messy'; G.save(); stage('intro', S.eq, { w: 120, h: 96, floor: 14 }).st.jump(); } el.parentElement.querySelectorAll('.chip-b').forEach(b => b.classList.toggle('on', b === el)); sfx('tap'); buzz('light'); },
   'set-g': el => { G.setGender(el.dataset.v); sfx('tap'); buzz('light'); },
   'set-toggle-opt': el => { S.settings[el.dataset.k] = !S.settings[el.dataset.k]; G.save(); sfx('tap'); buzz('light'); },
   'set-rest': el => { S.settings.rest = +el.dataset.v; G.save(); },

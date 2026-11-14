@@ -4,7 +4,7 @@
 <meta charset="utf-8">
 <title>RESPAWN · contact sheet</title>
 <!-- Every wearable item on body A and body B at all 4 evolution stages, for pixel QA.
-     npm start → http://localhost:5173/tools/contact-sheet.html?slot=top   (slot = overview | all | top | bottom | shoes | hair | face | head | hand | back) -->
+     npm start → http://localhost:5173/tools/contact-sheet.html?slot=top   (slot = overview | all | top | bottom | shoes | hair | detail | face | head | hand | back | new) -->
 <style>
   body { margin: 0; padding: 16px; background: #0b0b0e; color: #d9d9e0; font: 13px/1.3 system-ui, sans-serif; }
   h1 { font-size: 16px; margin: 0 0 4px; } p { margin: 0 0 14px; color: #8a8a96; }
@@ -23,7 +23,7 @@
 import { compose, paint, SW, SH } from '../js/sprite.js';
 import { ITEMS, DEFAULT_EQ, SLOTS } from '../js/data.js';
 const q = new URLSearchParams(location.search), want = q.get('slot') || 'overview', Z = +q.get('z') || 2;
-const WEAR = ['top', 'bottom', 'shoes', 'hair', 'face', 'head', 'hand', 'back'];
+const WEAR = ['top', 'bottom', 'shoes', 'hair', 'detail', 'face', 'head', 'hand', 'back'];
 const STAGES = ['NPC', 'Гравець', 'Ветеран', 'Майстер'];
 const base = { ...DEFAULT_EQ, face: null };
 const OVERVIEW = [
@@ -46,7 +46,12 @@ function row(label, sub, eq) {
   t.appendChild(tr);
 }
 const sep = name => { const tr = document.createElement('tr'); tr.className = 'sep'; tr.innerHTML = `<td colspan="10">${name}</td>`; t.appendChild(tr); };
-if (want === 'overview') { document.getElementById('h').textContent = 'Фігури A і B · огляд'; for (const [n, eq] of OVERVIEW) row(n, '', eq); }
+if (want === 'new') { // everything added in 2.0
+  document.getElementById('h').textContent = 'Нові речі 2.0';
+  const legacy = new Set(JSON.parse(q.get('legacy') || '[]'));
+  for (const s of WEAR) { const list = ITEMS.filter(i => i.slot === s && (i.src?.sp || ['bob', 'ponytail', 'braid', 'bun', 'pixie', 'curtain', 'waves', 'space_buns', 'copper', 'ash', 'lavender', 'crop', 'denim', 'skirt', 'mini', 'leggings', 'flare', 'kedy', 'cowboy', 'guitar'].includes(i.key) || s === 'detail')); if (!list.length) continue; sep(SLOTS.find(x => x.id === s)?.name || s); for (const it of list) row(it.name, it.id, { [s]: it.key, ...(s === 'hairColor' ? {} : {}) }); }
+}
+else if (want === 'overview') { document.getElementById('h').textContent = 'Фігури A і B · огляд'; for (const [n, eq] of OVERVIEW) row(n, '', eq); }
 else {
   const slots = want === 'all' ? WEAR : [want];
   document.getElementById('h').textContent = `Фігури A і B · ${slots.map(s => SLOTS.find(x => x.id === s)?.name || s).join(', ')}`;
