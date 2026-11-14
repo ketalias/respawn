@@ -141,7 +141,7 @@ export default function mindModule(c) {
     'skill-del': async () => { if (await ask('Видалити скіл разом із годинами? XP залишиться.')) { G.deleteSkill(form.id); closeSheet(); } },
     'skill-new': () => {
       form.cat = 'mind';
-      openSheet(`<h2>Новий скіл</h2><input class="field" id="sk-name" maxlength="40" placeholder="Наприклад, лінійна алгебра" autocomplete="off">
+      openSheet(`<h2>Новий скіл</h2><input class="field" id="sk-name" maxlength="40" placeholder="Наприклад, англійська чи гітара" autocomplete="off">
         <div class="lbl">Сфера</div>
         <div class="chips three">${SKILL_CATS.map(v => `<button class="chip-b ${v === form.cat ? 'on' : ''}" data-act="skill-cat" data-v="${v}">${icon(CATS[v].icon)}${CATS[v].name}</button>`).join('')}</div>
         <div class="sheet-foot"><button class="btn solid grow" data-act="skill-save">Додати</button></div>`);

@@ -333,6 +333,7 @@ function profile() {
   const L = G.level(), r = G.rank(), nr = nextRank(L.lv), achs = ACHS.filter(a => !a.mod || S.mods[a.mod] || S.ach[a.id]), got = achs.filter(a => S.ach[a.id]).length;
   const days = Math.max(1, Math.round((Date.now() - new Date(S.createdAt + 'T00:00:00')) / 864e5) + 1);
   const row = (k, v) => `<div class="kv"><span>${k}</span><b>${v}</b></div>`;
+  const on = (mod, n) => S.mods[mod] || n > 0; // module stats only when the module is on or was used
   return `<section class="card prof">
       ${cv(() => spriteCanvas(G.lookOf(), [16, 0, 32, 44]), 'prof-ava')}
       <div class="prof-b">
@@ -351,9 +352,9 @@ function profile() {
     <div class="achs">${achs.map(a => { const on = !!S.ach[a.id]; return `<button class="ach t-${a.tier} ${on ? 'on' : ''}" data-act="ach-open" data-id="${a.id}"><span class="ach-i">${icon(on ? a.icon : 'lock')}</span><small>${a.secret && !on ? '???' : G.nm(a)}</small></button>`; }).join('')}</div>
     ${sec('Статистика')}
     <section class="card kvs">
-      ${row('Усього XP', fmt(S.xp))}${row('Квестів виконано', fmt(S.counters.quests))}${row('Ідеальних днів', S.counters.perfect)}
-      ${row('Найдовший стрік', S.streak.best + ' дн.')}${row('Зароблено всього', fmt(S.money.log.reduce((a, e) => a + (e.out ? 0 : e.amt), 0)) + ' ' + esc(S.money.cur))}${row('Місячних босів убито', S.counters.goals)}
-      ${row('Бізнес-дій', fmt(S.counters.acts))}${row('Годин фокусу', kg(S.counters.focusMin / 60))}${row('Розминок мозку', S.counters.drills)}${row('Тренувань', S.counters.workouts)}
+      ${row('Усього XP', fmt(S.xp))}${row('Квестів виконано', fmt(S.counters.quests))}${row('Ідеальних днів', S.counters.perfect)}${row('Найдовший стрік', S.streak.best + ' дн.')}
+      ${on('money', S.money.log.length + S.counters.acts) ? row('Зароблено всього', fmt(S.money.log.reduce((a, e) => a + (e.out ? 0 : e.amt), 0)) + ' ' + esc(S.money.cur)) + row('Місячних босів убито', S.counters.goals) + row('Бізнес-дій', fmt(S.counters.acts)) : ''}
+      ${on('focus', S.counters.focusMin) ? row('Годин фокусу', kg(S.counters.focusMin / 60)) : ''}${on('drill', S.counters.drills) ? row('Розминок мозку', S.counters.drills) : ''}${on('gym', S.counters.workouts) ? row('Тренувань', S.counters.workouts) : ''}
     </section>
     ${sec('Налаштування')}
     <section class="card kvs">
@@ -361,7 +362,7 @@ function profile() {
       ${MODS.map(([k, n, d]) => `<div class="kv"><span>${n}<small class="kv-s">${d}</small></span><button class="sw ${S.mods[k] ? 'on' : ''}" data-act="mod-toggle" data-k="${k}" aria-label="${n}"><i></i></button></div>`).join('')}
       <div class="kv"><span>Звук</span><button class="sw ${S.settings.sound ? 'on' : ''}" data-act="set-toggle-opt" data-k="sound" aria-label="Звук"><i></i></button></div>
       <div class="kv"><span>Вібрація</span><button class="sw ${S.settings.haptics ? 'on' : ''}" data-act="set-toggle-opt" data-k="haptics" aria-label="Вібрація"><i></i></button></div>
-      <div class="kv"><span>Відпочинок між підходами</span><div class="chips">${[0, 60, 90, 120, 180].map(v => `<button class="chip-b sm ${S.settings.rest === v ? 'on' : ''}" data-act="set-rest" data-v="${v}">${v ? v + 'с' : 'вимк'}</button>`).join('')}</div></div>
+      ${S.mods.gym ? `<div class="kv"><span>Відпочинок між підходами</span><div class="chips">${[0, 60, 90, 120, 180].map(v => `<button class="chip-b sm ${S.settings.rest === v ? 'on' : ''}" data-act="set-rest" data-v="${v}">${v ? v + 'с' : 'вимк'}</button>`).join('')}</div></div>` : ''}
       <div class="kv col"><span>Збереження${tg ? ' · синхронізується з Telegram' : ' · на цьому пристрої'}</span><div class="chips"><button class="chip-b sm" data-act="export">Експорт</button><button class="chip-b sm" data-act="import">Імпорт</button><button class="chip-b sm danger" data-act="reset">Скинути все</button></div></div>
     </section>
     <p class="note center"><button data-act="ver">RESPAWN · v2.0</button></p>`;
@@ -394,7 +395,7 @@ function spheresHome() {
         : `<div class="lbl">Найсильніша</div>${pill(top)}<div class="lbl">Підтягни</div>${pill(low)}`}</div>
     </section>
     <div class="skills">${ids.map(sphereRow).join('')}</div>
-    <p class="note">Квест, скіл, тренування чи дохід приносять XP у свою сферу. Тапни сферу — там готові квести.</p>`;
+    <p class="note">Кожен квест приносить XP у свою сферу. Тапни сферу — там готові квести.</p>`;
 }
 function sphereBody(id) {
   const c = CATS[id], xp = sphereXP(S.stats, id), L = sphereLevel(xp), qs = sortQ(activeIn(id)), ks = S.skills.filter(k => sphereOf(k.cat) === id), tpl = freshIdeas(id);
@@ -507,7 +508,7 @@ function workoutDone(root, res) {
 let obRoot = null;
 const OB = { step: 0, q: null };
 const OB_LOOK = [
-  ['body', 'Фігура', [['a', 'A'], ['b', 'B']]],
+  ['body', 'Фігура', [['a', 'Чоловіча'], ['b', 'Жіноча']]],
   ['skin', 'Шкіра', ['s1', 's2', 's3', 's4']],
   ['hair', 'Зачіска', [['messy', 'Хаос'], ['buzz', 'Їжачок'], ['bob', 'Каре'], ['ponytail', 'Хвіст'], ['braid', 'Коса'], ['bald', 'Лисий']]],
   ['hairColor', 'Колір', ['black', 'brown']],
@@ -529,40 +530,17 @@ function onboarding(root) {
         const [v, n] = Array.isArray(o) ? o : [o, ''], it = ITEM[`${slot}:${v}`], on = S.eq[slot] === v;
         return `<button class="chip-b sm ${on ? 'on' : ''}" data-act="ob-eq" data-slot="${slot}" data-v="${v}">${it?.sw ? `<i class="dot" style="--sw:${it.sw}"></i>` : ''}${n || it?.name || v}</button>`;
       }).join('')}</div></div>`).join('')}
-      <p class="note">Усе це можна змінити в Шафці. Там же — ще 160 скінів.</p>
+      <p class="note">Усе це можна змінити потім у Шафці.</p>
       <div class="ob-nav"><button class="btn ghost" data-act="ob-back">Назад</button><button class="btn next big grow" data-act="ob-next">Далі</button></div>`,
     () => `<div class="ov-kicker">Крок 3 / 3</div><div class="lvup-title sm">Що качаємо?</div>
-      <p>Обери кілька щоденних квестів — по одному на сферу вже вибрано. Раджу 3–6, решту додаси потім.</p>
+      <p>Обери щоденні квести — по одному на сферу вже вибрано. Для старту вистачить 3–6, решту додаси потім.</p>
       <div class="ob-qs">${Object.entries(CATS).map(([id, c]) => `<div class="ob-sp"><div class="ob-sp-t">${icon(c.icon)}${c.name}</div><div class="chips wrap">${SPHERE_QUESTS[id].slice(0, 3).map((x, i) => `<button class="chip-b sm ${OB.q.has(`${id}:${i}`) ? 'on' : ''}" data-act="ob-q" data-k="${id}:${i}">${esc(x[0])}</button>`).join('')}</div></div>`).join('')}</div>
-      <div class="ob-g"><span>Ще в грі є — вимкни зайве</span><div class="chips wrap">${MODS.map(([k, n]) => `<button class="chip-b sm ${S.mods[k] ? 'on' : ''}" data-act="ob-mod" data-k="${k}">${n}</button>`).join('')}</div></div>
       <div class="ob-nav"><button class="btn ghost" data-act="ob-back">Назад</button><button class="btn next big grow" data-act="onboard">Почати гру · ${OB.q.size}</button></div>`,
   ];
   root.innerHTML = `<div class="ov intro ob">${OB.step ? obDots() : ''}${steps[OB.step]()}</div>`;
   hydrate(root);
 }
 const obRender = () => { if (obRoot) { onboarding(obRoot); obRoot.scrollTop = 0; } };
-
-/* ---------- «Що нового» for players from 1.x (once) ---------- */
-function whatsNew(root) {
-  const got = S.owned.map(id => ITEM[id]).filter(it => it?.src?.sp);
-  const thumbs = got.slice(0, 6).map(it => `<span class="news-it">${itemThumb(it)}</span>`).join('');
-  const gChips = `<div class="chips two">${[['m', 'Він'], ['f', 'Вона']].map(([v, n]) => `<button class="chip-b ${S.profile.g === v ? 'on' : ''}" data-act="news-g" data-v="${v}">${n}</button>`).join('')}</div>`;
-  const bChips = `<div class="chips two">${[['a', 'Фігура A'], ['b', 'Фігура B']].map(([v, n]) => `<button class="chip-b ${S.eq.body === v ? 'on' : ''}" data-act="news-body" data-v="${v}">${n}</button>`).join('')}</div>`;
-  root.innerHTML = `<div class="ov news">
-    <div class="ov-kicker">Оновлення</div>
-    <div class="lvup-title sm">RESPAWN 2.0</div>
-    <div class="lvup-stage">${cv(() => stage('news', S.eq, { w: 120, h: 96, floor: 14 }).cv)}<div class="scan"></div></div>
-    <div class="news-list">
-      <div class="news-row">${icon('hex')}<div><b>6 сфер замість 5</b><small>Математика й Інженерія тепер — <b>Розум</b>, Дисципліна — <b>Порядок</b>. Нові сфери: <b>Спокій</b> і <b>Люди</b>. Твій XP і квести на місці.</small></div></div>
-      <div class="news-row">${icon('shirt')}<div><b>+52 скіни, 2 фігури, образи</b><small>${got.length ? `За рівні твоїх сфер уже відкрито ${got.length} ${plural(got.length, 'скін', 'скіни', 'скінів')} — вони в Шафці:` : 'Нові речі — у магазині та за рівні сфер.'}</small>${thumbs ? `<div class="news-its">${thumbs}</div>` : ''}</div></div>
-      <div class="news-row">${icon('cash')}<div><b>Гроші, Фокус і Зал — у «Сферах»</b><small>Бос місяця лишився на Базі. Непотрібні модулі вимикаються в Профілі.</small></div></div>
-    </div>
-    <div class="ob-g"><span>Як до тебе звертатись?</span>${gChips}</div>
-    <div class="ob-g"><span>Фігура</span>${bChips}</div>
-    <button class="btn next big" data-act="news-ok">Погнали</button>
-  </div>`;
-  hydrate(root);
-}
 
 /* ---------- rest timer ---------- */
 function renderRest() {
@@ -606,15 +584,11 @@ const A = {
   'ob-back': () => { OB.step = Math.max(0, OB.step - 1); sfx('tap'); obRender(); },
   'ob-eq': el => { const { slot, v } = el.dataset; S.eq[slot] = v; S.manual[slot] = true; G.save(true); sfx('tap'); buzz('light'); obRender(); stage('intro', S.eq, { w: 120, h: 96, floor: 14 }).st.jump(); },
   'ob-q': el => { const k = el.dataset.k; if (OB.q.has(k)) OB.q.delete(k); else OB.q.add(k); sfx('tap'); obRender(); },
-  'ob-mod': el => { S.mods[el.dataset.k] = !S.mods[el.dataset.k]; G.save(true); sfx('tap'); obRender(); },
   onboard: () => {
     const picked = [...OB.q].map(k => { const [id, i] = k.split(':'), [title, diff, type] = SPHERE_QUESTS[id][+i]; return [title, id, diff, type]; });
     if (picked.length) G.setStarterQuests(picked);
     S.onboarded = true; S.seen.v2 = 1; G.save(); sfx('buy'); buzz('medium'); nextOverlay(); G.timeSecrets(); react({ x: innerWidth / 2, y: innerHeight / 3 });
   },
-  'news-g': el => { G.setGender(el.dataset.v); el.parentElement.querySelectorAll('.chip-b').forEach(b => b.classList.toggle('on', b === el)); sfx('tap'); buzz('light'); },
-  'news-body': el => { G.equip('body', el.dataset.v); el.parentElement.querySelectorAll('.chip-b').forEach(b => b.classList.toggle('on', b === el)); stage('news', S.eq, { w: 120, h: 96, floor: 14 }).st.jump(); sfx('tap'); buzz('light'); },
-  'news-ok': () => { S.seen.v2 = 1; G.save(); sfx('buy'); buzz('medium'); nextOverlay(); react({ x: innerWidth / 2, y: innerHeight / 3 }); },
 
   'hero-tap': (el, e) => {
     stages.home?.st.jump(); G.tapHero(); sfx('tap'); buzz('light');
@@ -786,8 +760,7 @@ if (tg) {
 G.onChange(render);
 render(); enter();
 if (!S.onboarded) overlay(onboarding);
-else if (!S.seen?.v2) overlay(whatsNew);
-G.syncCloud().then(changed => { if (changed && S.onboarded) { nextOverlay(); if (!S.seen?.v2) overlay(whatsNew); } });
+G.syncCloud().then(changed => { if (changed && S.onboarded) nextOverlay(); });
 if ('serviceWorker' in navigator && location.protocol === 'https:') navigator.serviceWorker.register('sw.js').catch(() => {});
 
 if (/^(localhost|127\.0\.0\.1)$/.test(location.hostname) && location.search.includes('dev')) {

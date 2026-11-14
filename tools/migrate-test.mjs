@@ -159,7 +159,7 @@ ok(['pet:dog', 'pet:rabbit', 'aura:sakura', 'scene:library', 'theme:mint', 'top:
 console.log('stage 6');
 const { ACH: A6 } = await import('../js/data.js');
 const o = load(v2);
-ok(o.seen && !o.seen.v2 && o.onboarded, 'old account → «Що нового» will show once');
+ok(o.onboarded && o.mods.money && o.mods.drill, 'old account skips onboarding and keeps every module on');
 ok(G.setStarterQuests([['x', 'calm', 'e']]) === false && G.S.quests.length === v2.quests.length, 'onboarding quests never replace a played save');
 load(undefined);
 ok(G.setStarterQuests([['Медитація', 'calm', 'e'], ['Книга', 'mind', 'x', 'once']]) && G.S.quests.length === 2 && G.S.quests[1].type === 'once', 'new player gets exactly the picked quests');
@@ -172,6 +172,8 @@ console.log('new player');
 const n = load(undefined);
 ok(Object.keys(n.stats).join() === Object.keys(CATS).join(), 'fresh stats = the 6 spheres');
 ok(n.quests.every(q => CATS[q.cat]) && n.skills.every(k => CATS[k.cat]), 'starter quests & skills use canonical sphere ids');
+ok(!n.mods.money && !n.mods.drill && n.mods.gym && n.mods.focus, 'new player: Гроші й Розминка off by default, Зал і Фокус on');
+ok(!n.eq.face && n.eq.body === 'a', 'new player starts with a neutral look (no glasses)');
 
 console.log(fails ? `\n${fails} FAILED` : '\nALL PASSED');
 process.exit(fails ? 1 : 0);

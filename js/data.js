@@ -96,11 +96,11 @@ export function sphereLevel(xp) {
 
 export const BUBBLES = [
   'Ще один квест?', 'Ти не NPC.', 'Грінд не чекає.', 'XP саме себе не зафармить.', 'Сьогодні +1%.', 'Дисципліна > мотивація.',
-  'Легкий день був учора.', 'GG, продовжуй.', 'Не зливай стрік!', 'Хто, якщо не ти?', 'Респавн — і вперед.', 'Гроші люблять рахунок.',
-  'Складний відсоток працює і на скіли.', 'Спершу порахуй, потім роби.', 'Працює? Не чіпай. Жартую, рефактор.', 'Маржа — це теж характер.',
-  'Ділити на нуль не можна. Здаватись теж.', 'Кеш-флоу сам себе не зробить.', 'It works on my machine.', 'P ≠ NP, але ти спробуй.',
+  'Легкий день був учора.', 'GG, продовжуй.', 'Не зливай стрік!', 'Хто, якщо не ти?', 'Респавн — і вперед.', 'Маленький крок — теж крок.',
+  'Почни з легкого квесту.', 'Вода, сон, рух. База.', 'Краще зроблено, ніж ідеально.', 'Один квест — і день уже не нульовий.',
+  'Новий день — новий лут.', 'Відпочинок теж прокачка.', 'Я в тебе вірю.', 'Ну що, погнали?',
 ];
-export const BUBBLES_HURT = ['Ай.', 'Досить.', 'Я рахую кожен тап.', 'Серйозно?', 'Іди зароби грошей.', 'Це не клікер.', 'Гаразд, це клікер.'];
+export const BUBBLES_HURT = ['Ай.', 'Досить.', 'Я рахую кожен тап.', 'Серйозно?', 'Краще квест закрий.', 'Це не клікер.', 'Гаразд, це клікер.'];
 
 /* ---------- business reps: quick-log actions (cap = rewarded per day) ---------- */
 export const BIZ_ACTS = [
@@ -150,7 +150,7 @@ const I = (slot, key, name, src = 0, rar = 'c', extra = {}) => ({ id: `${slot}:$
 const lv = n => ({ lv: n }), $ = n => ({ coins: n }), ach = id => ({ ach: id }), sp = (s, at) => ({ sp: s, at });
 
 export const ITEMS = [
-  I('body', 'a', 'Фігура A'), I('body', 'b', 'Фігура B'),
+  I('body', 'a', 'Чоловіча'), I('body', 'b', 'Жіноча'),
 
   I('hair', 'messy', 'Хаос'), I('hair', 'buzz', 'Їжачок'), I('hair', 'bald', 'Лисий'),
   I('hair', 'curly', 'Кучері', $(60)), I('hair', 'spiky', 'Шипи', $(80), 'r'), I('hair', 'slick', 'Андеркат', $(80), 'r'),
@@ -245,8 +245,9 @@ export const THEMES = {
   cash: ['#4ade80', '#03140a'], blueprint: ['#5aa9ff', '#00101e'], amber: ['#ffb347', '#1a0e00'],
   sakura: ['#ffb7d0', '#1c0a12'], lavender: ['#c4b5fd', '#120c22'], mint: ['#7ee8c4', '#03140f'],
 };
+// new players start neutral (no glasses); «Він / Вона» in onboarding then picks the figure. Old saves always store every slot, so this never changes them.
 export const DEFAULT_EQ = {
-  body: 'a', hair: 'messy', hairColor: 'black', skin: 's2', face: 'glasses', detail: null, head: null, top: 'tee_gray', bottom: 'jeans',
+  body: 'a', hair: 'messy', hairColor: 'brown', skin: 's2', face: null, detail: null, head: null, top: 'tee_gray', bottom: 'jeans',
   shoes: 'kicks_white', hand: null, back: null, pet: null, aura: null, scene: 'room', theme: 'mono',
 };
 
@@ -294,7 +295,7 @@ export const ACHS = [
   A('f90', 'Глибоке занурення', 'Фокус-сесія на 90+ хвилин', 'clock', 's', 60, cnt('deep', 1)),
   A('engh10', 'П\'ятдесят годин Розуму', '50 годин фокусу на скілах Розуму', 'gear', 's', 80, s => [sphereHours('mind')(s), 50]),
   A('h100', 'Сто годин', '100 годин фокусу сумарно', 'gear', 'g', 300, s => [Math.floor((s.counters.focusMin || 0) / 60), 100]),
-  A('sk5', 'Стек', 'Прокачай 3 скіли до 5 рівня', 'sigma', 'g', 150, s => [s.skills.filter(k => skillLevel(k.mins) >= 5).length, 3]),
+  A('sk5', 'Різнобічність', 'Прокачай 3 скіли до 5 рівня', 'sigma', 'g', 150, s => [s.skills.filter(k => skillLevel(k.mins) >= 5).length, 3]),
   // тіло
   A('w1', 'Перший підхід', 'Заверши перше тренування', 'dumbbell', 'b', 15, cnt('workouts', 1)),
   A('w10', 'Завсідник', '10 тренувань', 'dumbbell', 's', 60, cnt('workouts', 10)),

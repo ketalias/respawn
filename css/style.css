@@ -420,8 +420,4 @@ select.field { appearance: none; -webkit-appearance: none; }
 .ob-qs { display: flex; flex-direction: column; gap: 10px; text-align: left; }
 .ob-sp-t { display: flex; align-items: center; gap: 8px; font-size: 11px; letter-spacing: .14em; text-transform: uppercase; color: var(--mut); margin-bottom: 6px; } .ob-sp-t .ico { color: var(--acc); width: 13px; height: 13px; }
 .ob-qs .chips, .ob-g .chips.wrap { justify-content: flex-start; }
-.news-list { display: flex; flex-direction: column; gap: 10px; text-align: left; }
-.news-row { display: flex; gap: 12px; padding: 12px 14px; border-radius: 16px; border: 1px solid var(--line); background: var(--card); }
-.news-row > .ico { width: 18px; height: 18px; color: var(--acc); margin-top: 2px; } .news-row b { font-weight: 600; font-size: 14px; } .news-row small { display: block; margin-top: 4px; font-size: 12.5px; line-height: 1.45; color: var(--mut); } .news-row small b { font-size: inherit; color: var(--tx); font-weight: 500; }
-.news-its { display: grid; grid-template-columns: repeat(6, 1fr); gap: 4px; margin-top: 8px; } .news-it .th { height: 40px; }
 .kv-s { display: block; font-size: 11px; color: var(--mut); margin-top: 2px; }

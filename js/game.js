@@ -32,7 +32,7 @@ function fresh() {
     lootOn: null, coinOn: null, settings: { sound: true, haptics: true, rest: 90 },
     // v3 (2.0)
     profile: { g: null },                                   // 'm' | 'f'; null = not chosen yet → current (masculine) wording
-    mods: { money: true, gym: true, focus: true, drill: true, home: ['money', 'drill'] }, // optional modules + cards pinned on Base
+    mods: { money: false, gym: true, focus: true, drill: false, home: ['money', 'drill'] }, // optional modules (Гроші й Розминка — вмикаються в Профілі) + cards pinned on Base
     privacy: { card: 'friends', spheres: true, heat: true, money: false, quests: false },  // used once friends exist
     looks: [],                                              // saved outfits: { name, eq }
     seen: {},                                               // one-time screens: { v2: «Що нового» shown }
@@ -43,6 +43,7 @@ function hydrate(raw) {
   if (!raw || typeof raw !== 'object') return f;
   const s = { ...f, ...raw };
   for (const k of ['streak', 'eq', 'counters', 'settings', 'money', 'acts', 'drill', 'profile', 'mods', 'privacy', 'seen']) s[k] = { ...f[k], ...(raw[k] || {}) };
+  if (!raw.mods) s.mods = { ...s.mods, money: true, drill: true }; // saves from before modules existed keep everything they had
   // v1 saves had str/int/dis/vit — fold them into the new attributes.
   // Keys and categories from newer versions are kept as-is: never dropped, never remapped.
   const old = raw.stats || {};
@@ -91,7 +92,7 @@ function backupOnce(json, raw) {
 export function load() {
   try { const json = localStorage.getItem(KEY), raw = JSON.parse(json); backupOnce(json, raw); S = hydrate(raw); } catch { S = fresh(); }
   if (!S.name && tg?.initDataUnsafe?.user?.first_name) S.name = tg.initDataUnsafe.user.first_name;
-  rollDay(); unlockSpheres(null, true); // rewards for sphere levels reached before 2.0 (shown in «Що нового»)
+  rollDay(); unlockSpheres(null, true); // rewards for sphere levels reached before 2.0
 }
 // pull a newer save from Telegram cloud (other device / cleared webview storage)
 export async function syncCloud() {
