@@ -1,5 +1,5 @@
 // RESPAWN — skills screen: focus sessions per skill + daily brain warm-up mini-game.
-import { CATS, SKILL_CATS, skillLevel, skillSpan, attrLevel } from './data.js';
+import { CATS, SKILL_CATS, skillLevel, skillSpan, attrLevel, catOf } from './data.js';
 import { makeRun, drillTier } from './drill.js';
 
 const hrs = mins => (Math.round((mins / 60) * 10) / 10).toString().replace('.', ',');
@@ -20,7 +20,7 @@ export default function mindModule(c) {
       <button class="skill-b" data-act="skill-open" data-id="${k.id}">
         <div class="skill-t"><b>${esc(k.name)}</b><span>LV ${lv}</span></div>
         <div class="skill-bar"><i style="width:${Math.max(2, pct)}%"></i></div>
-        <small>${icon(CATS[k.cat].icon)}${CATS[k.cat].name} · ${hrs(k.mins)} год${span ? ` · до LV ${lv + 1}: ${hrs((span[1] - h) * 60)} год` : ''}</small>
+        <small>${icon(catOf(k.cat).icon)}${catOf(k.cat).name} · ${hrs(k.mins)} год${span ? ` · до LV ${lv + 1}: ${hrs((span[1] - h) * 60)} год` : ''}</small>
       </button>
       <button class="skill-go" data-act="focus-start" data-id="${k.id}" aria-label="Почати фокус">${icon(live ? 'clock' : 'play')}</button>
     </div>`;
@@ -50,7 +50,7 @@ export default function mindModule(c) {
     run.root.innerHTML = `<div class="ov drill">
       <div class="drill-top"><button class="icon-b" data-act="drill-quit" aria-label="Вийти">${icon('x')}</button>
         <div class="dots">${run.qs.map((_, j) => `<i class="${j < run.i ? (run.results[j].ok ? 'ok' : 'bad') : j === run.i ? 'cur' : ''}"></i>`).join('')}</div>
-        <span class="tag">${icon(CATS[q.attr].icon)}${CATS[q.attr].name}</span></div>
+        <span class="tag">${icon(catOf(q.attr).icon)}${catOf(q.attr).name}</span></div>
       <div class="drill-time"><i></i></div>
       <div class="drill-q ${q.text.length <= 12 ? 'big' : ''}">${esc(q.text).replace(/\n/g, '<br>')}</div>
       <div class="drill-a" id="drill-a"><span class="ph">?</span></div>
@@ -78,7 +78,7 @@ export default function mindModule(c) {
       <div class="ov-kicker">Розминка мозку</div>
       <div class="lvup-title ${res.perfect ? '' : 'sm'}">${res.perfect ? 'ІДЕАЛЬНО' : `${res.okN} / ${res.n}`}</div>
       <div class="loot-list">
-        ${Object.entries(res.gain).map(([attr, xp]) => `<div class="loot-row">${icon(CATS[attr].icon)}<span>${CATS[attr].name}</span><small>+${xp} XP</small></div>`).join('')}
+        ${Object.entries(res.gain).map(([attr, xp]) => `<div class="loot-row">${icon(catOf(attr).icon)}<span>${catOf(attr).name}</span><small>+${xp} XP</small></div>`).join('')}
         ${res.perfect && res.first ? `<div class="loot-row rar-l">${icon('star')}<span>Без помилок</span><small>+20 XP</small></div>` : ''}
         ${res.coins ? `<div class="loot-row">${icon('coin')}<span>+${res.coins} монет</span></div>` : ''}
         ${res.okN ? '' : `<div class="loot-row">${icon('skull')}<span>Мозок ще спить. Завтра реванш.</span></div>`}
@@ -123,7 +123,7 @@ export default function mindModule(c) {
     'skill-open': el => {
       const k = S().skills.find(x => x.id === el.dataset.id); if (!k) return;
       form.id = k.id;
-      openSheet(`<h2>${esc(k.name)}</h2><div class="lbl">${CATS[k.cat].name} · LV ${skillLevel(k.mins)} · ${hrs(k.mins)} год</div>
+      openSheet(`<h2>${esc(k.name)}</h2><div class="lbl">${catOf(k.cat).name} · LV ${skillLevel(k.mins)} · ${hrs(k.mins)} год</div>
         <div class="lbl">Записати вже зроблене</div>
         <div class="chips wrap">${[15, 25, 30, 45, 60, 90, 120].map(m => `<button class="chip-b" data-act="skill-log" data-m="${m}">${m} хв</button>`).join('')}</div>
         <div class="custom two"><input class="field" id="sk-min" inputmode="numeric" placeholder="Своє, хв"><button class="btn solid" data-act="skill-log">${icon('plus')}</button></div>

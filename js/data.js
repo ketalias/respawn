@@ -32,6 +32,8 @@ export const CATS = {
   body: { name: 'Тіло', attr: 'ТІЛО', icon: 'heart' },
 };
 export const OLD_CATS = { str: 'body', vit: 'body', int: 'math' }; // saves from v1
+// category from a newer version this build doesn't know yet → neutral fallback instead of a crash
+export const catOf = k => CATS[k] || { name: 'Інше', attr: 'ІНШЕ', icon: 'star' };
 export const attrLevel = xp => Math.floor(Math.sqrt(Math.max(0, xp) / 25)) + 1;
 
 export const DIFFS = {

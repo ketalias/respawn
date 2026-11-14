@@ -1,7 +1,7 @@
 // RESPAWN — screens and interaction.
 import * as G from './game.js';
 import { S, tg } from './game.js';
-import { xpNeed, rankOf, nextRank, RANKS, CATS, DIFFS, QUEST_IDEAS, BUBBLES, BUBBLES_HURT, GROUPS, SLOTS, ITEMS, ITEM, RAR, THEMES, ACHS, ACH, attrLevel } from './data.js';
+import { xpNeed, rankOf, nextRank, RANKS, CATS, DIFFS, QUEST_IDEAS, BUBBLES, BUBBLES_HURT, GROUPS, SLOTS, ITEMS, ITEM, RAR, THEMES, ACHS, ACH, attrLevel, catOf } from './data.js';
 import { Stage, AURA, spriteCanvas, sceneCanvas, petCanvas } from './scene.js';
 import moneyModule from './money.js';
 import mindModule, { clockLong } from './mind.js';
@@ -42,7 +42,7 @@ function applyTheme() {
 
 /* ---------- shared fragments ---------- */
 function questCard(q) {
-  const done = G.isDone(q), D = DIFFS[q.diff], C = CATS[q.cat];
+  const done = G.isDone(q), D = DIFFS[q.diff] || DIFFS.m, C = catOf(q.cat);
   return `<div class="quest ${done ? 'done' : ''} d-${q.diff}">
     <button class="qcheck" data-act="quest-toggle" data-id="${q.id}" aria-label="Виконати">${icon('check')}</button>
     <div class="qbody" data-act="quest-edit" data-id="${q.id}">
@@ -104,7 +104,7 @@ function home() {
       ${cv(() => stage('home', S.eq, { w: 120, h: 100, floor: 15 }).cv)}
       <div class="scan"></div>
       <div class="hud tl"><div class="lvbig"><small>LV</small>${two(L.lv)}</div><div class="rank">${r.name}</div></div>
-      <div class="hud tr">${c > 1 ? `<span class="chip combo">COMBO ×${c}</span>` : ''}${S.eq.aura ? `<span class="chip" style="color:${AURA[S.eq.aura]}">${ITEM['aura:' + S.eq.aura].name}</span>` : ''}</div>
+      <div class="hud tr">${c > 1 ? `<span class="chip combo">COMBO ×${c}</span>` : ''}${S.eq.aura && ITEM['aura:' + S.eq.aura] ? `<span class="chip" style="color:${AURA[S.eq.aura]}">${ITEM['aura:' + S.eq.aura].name}</span>` : ''}</div>
       <div class="bubble" id="bubble"></div>
     </div>
     <div class="xp">
@@ -342,7 +342,7 @@ function profile() {
       <div class="kv"><span>Відпочинок між підходами</span><div class="chips">${[0, 60, 90, 120, 180].map(v => `<button class="chip-b sm ${S.settings.rest === v ? 'on' : ''}" data-act="set-rest" data-v="${v}">${v ? v + 'с' : 'вимк'}</button>`).join('')}</div></div>
       <div class="kv col"><span>Збереження${tg ? ' · синхронізується з Telegram' : ' · на цьому пристрої'}</span><div class="chips"><button class="chip-b sm" data-act="export">Експорт</button><button class="chip-b sm" data-act="import">Імпорт</button><button class="chip-b sm danger" data-act="reset">Скинути все</button></div></div>
     </section>
-    <p class="note center"><button data-act="ver">RESPAWN · v1.1</button></p>`;
+    <p class="note center"><button data-act="ver">RESPAWN · v1.2</button></p>`;
 }
 
 /* ---------- render ---------- */
