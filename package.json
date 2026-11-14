@@ -6,6 +6,6 @@
   "scripts": {
     "start": "python3 -m http.server 5173",
     "icons": "node tools/make-icons.mjs",
-    "test": "node tools/migrate-test.mjs"
+    "test": "node tools/migrate-test.mjs && node tools/sprite-test.mjs"
   }
 }

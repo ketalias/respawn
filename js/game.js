@@ -131,7 +131,7 @@ export function setGender(v) { S.profile.g = v === 'f' || v === 'm' ? v : null; 
 export const isDone = q => (q.type === 'daily' ? q.doneOn === today() : !!q.doneOn);
 export function lookOf(eq = S.eq) {
   const r = rank();
-  return { skin: eq.skin, hair: eq.hair, hairColor: eq.hairColor, face: eq.face, head: eq.head, top: eq.top, bottom: eq.bottom, shoes: eq.shoes, back: eq.back, hand: eq.hand, build: r.build, expr: r.expr };
+  return { body: eq.body, skin: eq.skin, hair: eq.hair, hairColor: eq.hairColor, face: eq.face, head: eq.head, top: eq.top, bottom: eq.bottom, shoes: eq.shoes, back: eq.back, hand: eq.hand, build: r.build, expr: r.expr };
 }
 export const allExercises = () => [...EXERCISES, ...S.customEx];
 export const exById = id => allExercises().find(e => e.id === id) || { id, name: 'Вправа', g: 0, type: 'w' };

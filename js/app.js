@@ -32,7 +32,7 @@ function stage(name, eq = S.eq, opts) {
   return s;
 }
 const HEAD = [20, 2, 24, 26];
-const CROP = { hair: HEAD, hairColor: HEAD, skin: HEAD, face: HEAD, head: [18, 0, 28, 28], top: [14, 22, 36, 24], bottom: [19, 40, 26, 24], shoes: [19, 46, 26, 18], back: [2, 6, 60, 58], hand: [28, 30, 24, 24] };
+const CROP = { body: [16, 8, 32, 56], hair: HEAD, hairColor: HEAD, skin: HEAD, face: HEAD, head: [18, 0, 28, 28], top: [14, 22, 36, 24], bottom: [19, 40, 26, 24], shoes: [19, 46, 26, 18], back: [2, 6, 60, 58], hand: [28, 30, 24, 24] };
 
 function applyTheme() {
   const [a, ink] = THEMES[S.eq.theme] || THEMES.mono;
@@ -257,7 +257,8 @@ function itemThumb(it) {
   if (it.slot === 'scene') return cv(() => sceneCanvas(it.key, acc()), 'th scene');
   if (it.slot === 'pet') return cv(() => petCanvas(it.key), 'th pet');
   if (it.slot === 'aura' || it.slot === 'theme') return `<span class="th swatch" style="--sw:${it.sw}"><i></i></span>`;
-  return cv(() => spriteCanvas(G.lookOf({ ...S.eq, [it.slot]: it.key }), CROP[it.slot]), 'th');
+  const eq = it.slot === 'body' ? { ...S.eq, top: 'tee_gray', back: null, hand: null, head: null } : S.eq; // silhouette shows best in a plain tee
+  return cv(() => spriteCanvas(G.lookOf({ ...eq, [it.slot]: it.key }), CROP[it.slot]), it.slot === 'body' ? 'th full' : 'th');
 }
 function locker() {
   if (ui.tryOn && G.has(ui.tryOn)) ui.tryOn = null;
@@ -655,7 +656,7 @@ const A = {
       ${hide ? '' : `<div class="xp-bar slim"><i style="width:${Math.min(100, (cur / goal) * 100)}%"></i></div><div class="xp-meta"><span>${fmt(Math.min(cur, goal))} / ${fmt(goal)}</span><span>${on ? 'Отримано' : ''}</span></div>`}
       <div class="loot-list"><div class="loot-row">${icon('coin')}<span>+${a.coins} монет</span></div>${item ? `<div class="loot-row rar-${item.rar}">${icon('star')}<span>Скін «${hide ? '???' : item.name}»</span><small>${RAR[item.rar]}</small></div>` : ''}</div>`);
   },
-  'ob-g': el => { G.setGender(el.dataset.v); el.parentElement.querySelectorAll('.chip-b').forEach(b => b.classList.toggle('on', b === el)); sfx('tap'); buzz('light'); },
+  'ob-g': el => { G.setGender(el.dataset.v); if (!S.manual.body) { S.eq.body = el.dataset.v === 'f' ? 'b' : 'a'; G.save(); stage('intro', S.eq, { w: 120, h: 96, floor: 14 }).st.jump(); } el.parentElement.querySelectorAll('.chip-b').forEach(b => b.classList.toggle('on', b === el)); sfx('tap'); buzz('light'); },
   'set-g': el => { G.setGender(el.dataset.v); sfx('tap'); buzz('light'); },
   'set-toggle-opt': el => { S.settings[el.dataset.k] = !S.settings[el.dataset.k]; G.save(); sfx('tap'); buzz('light'); },
   'set-rest': el => { S.settings.rest = +el.dataset.v; G.save(); },

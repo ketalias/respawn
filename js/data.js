@@ -137,7 +137,7 @@ export const EXERCISES = [
 
 /* ---------- items ---------- */
 export const SLOTS = [
-  { id: 'hair', name: 'Зачіска' }, { id: 'hairColor', name: 'Колір' }, { id: 'skin', name: 'Шкіра' },
+  { id: 'body', name: 'Фігура' }, { id: 'hair', name: 'Зачіска' }, { id: 'hairColor', name: 'Колір' }, { id: 'skin', name: 'Шкіра' },
   { id: 'face', name: 'Обличчя', opt: true }, { id: 'head', name: 'Голова', opt: true },
   { id: 'top', name: 'Верх' }, { id: 'bottom', name: 'Низ' }, { id: 'shoes', name: 'Взуття' },
   { id: 'hand', name: 'В руці', opt: true }, { id: 'back', name: 'Спина', opt: true }, { id: 'pet', name: 'Пет', opt: true }, { id: 'aura', name: 'Аура', opt: true },
@@ -150,6 +150,8 @@ const I = (slot, key, name, src = 0, rar = 'c', extra = {}) => ({ id: `${slot}:$
 const lv = n => ({ lv: n }), $ = n => ({ coins: n }), ach = id => ({ ach: id });
 
 export const ITEMS = [
+  I('body', 'a', 'Фігура A'), I('body', 'b', 'Фігура B'),
+
   I('hair', 'messy', 'Хаос'), I('hair', 'buzz', 'Їжачок'), I('hair', 'bald', 'Лисий'),
   I('hair', 'curly', 'Кучері', $(60)), I('hair', 'spiky', 'Шипи', $(80), 'r'), I('hair', 'slick', 'Андеркат', $(80), 'r'),
   I('hair', 'long', 'Довге', $(100), 'r'), I('hair', 'knot', 'Самурай', $(120), 'r'), I('hair', 'mohawk', 'Ірокез', $(150), 'e'),
@@ -215,7 +217,7 @@ export const THEMES = {
   cash: ['#4ade80', '#03140a'], blueprint: ['#5aa9ff', '#00101e'], amber: ['#ffb347', '#1a0e00'],
 };
 export const DEFAULT_EQ = {
-  hair: 'messy', hairColor: 'black', skin: 's2', face: 'glasses', head: null, top: 'tee_gray', bottom: 'jeans',
+  body: 'a', hair: 'messy', hairColor: 'black', skin: 's2', face: 'glasses', head: null, top: 'tee_gray', bottom: 'jeans',
   shoes: 'kicks_white', hand: null, back: null, pet: null, aura: null, scene: 'room', theme: 'mono',
 };
 

@@ -117,7 +117,14 @@ const masc = /(ець|ок|ер|ан|ник|ач|ист|ний)$/;
 ok(RANKS.every(r => !masc.test(r.name) || r.nameF || r.name === 'Фінальний бос'), 'every gendered rank has a feminine form');
 ok(ACHS.filter(a => a.nameF).length === 10, 'feminine achievement titles present', ACHS.filter(a => a.nameF).length);
 
-/* ---------- 7. new player ---------- */
+/* ---------- 7. фігура A / B ---------- */
+console.log('body');
+const old = load(v2);
+ok(old.eq.body === 'a' && G.lookOf(old.eq).body === 'a', 'old save → фігура A (as before)');
+ok(G.has('body:a') && G.has('body:b'), 'both figures are free starters');
+G.equip('body', 'b'); ok(G.lookOf().body === 'b', 'switching to B reaches the sprite');
+
+/* ---------- 8. new player ---------- */
 console.log('new player');
 const n = load(undefined);
 ok(Object.keys(n.stats).join() === Object.keys(CATS).join(), 'fresh stats = the 6 spheres');

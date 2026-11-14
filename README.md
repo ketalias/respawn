@@ -30,6 +30,6 @@ npm start          # http://localhost:5173
 | `js/sprite.js` | Процедурний піксельний персонаж (одяг, зачіски, аксесуари) |
 | `js/scene.js` | Локації, аури, анімація сцени |
 | `js/app.js`, `js/ui.js` | Екрани, іконки, звуки, конфеті |
-| `tools/` | Генерація іконок (`npm run icons`) і dev-хелпер |
+| `tools/` | Генерація іконок (`npm run icons`), dev-хелпер, тести (`npm test`), `contact-sheet.html` — усі речі на фігурах A і B |
 
 Новий скін = рядок у `ITEMS` (`data.js`) + функція малювання в `sprite.js`. Нова ачівка = рядок у `ACHS`. Бізнес-дії під свій бізнес — `BIZ_ACTS`, стартові квести — `STARTER_QUESTS`, нові типи задач — `GEN` у `drill.js`.

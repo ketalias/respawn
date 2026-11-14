@@ -40,10 +40,20 @@ class Buf {
   pts(list, c) { for (const [x, y] of list) this.px(x, y, c); }
 }
 
-function geo(build, bob) {
-  return { build, tw: [6, 7, 8, 9][build], aw: [3, 3, 4, 5][build], hy: 12 + bob, ty: 27 + bob, bob };
+// body A = the original build: gets broader & bulkier with rank.
+// body B = narrower shoulders, waist and hips: gets toned and athletic with rank, not bulky.
+const BODY = {
+  a: { tw: [6, 7, 8, 9], aw: [3, 3, 4, 5] },
+  b: { tw: [5, 5, 6, 6], aw: [2, 3, 3, 4] },
+};
+function geo(build, bob, body) {
+  const b = body === 'b' ? 'b' : 'a', P = BODY[b];
+  return { build, body: b, tw: P.tw[build], aw: P.aw[build], hy: 12 + bob, ty: 27 + bob, bob };
 }
-const thw = (G, r) => G.tw - (G.build >= 2 && r >= 9 ? 1 : 0) - (G.build >= 3 && r >= 12 ? 1 : 0);
+// torso half-width for row r (0 = shoulders … 15 = hips)
+// 1px only: a deeper waist leaves a 2px gap to the straight arms that the outline fills solid black
+const waistB = (G, r) => (r >= (G.build >= 2 ? 7 : 8) && r <= (G.build >= 2 ? 12 : 11) ? 1 : 0);
+const thw = (G, r) => (G.body === 'b' ? G.tw - waistB(G, r) : G.tw - (G.build >= 2 && r >= 9 ? 1 : 0) - (G.build >= 3 && r >= 12 ? 1 : 0));
 
 /* ---------- body parts ---------- */
 function torso(K, m) {
@@ -54,12 +64,13 @@ function torso(K, m) {
     B.rect(CX + hw - 2, y, 2, 1, m.s);
     B.px(CX - hw, y, m.h);
   }
+  if (G.body === 'b') { const y = G.ty + 5; B.rect(CX - 4, y, 3, 1, m.s); B.rect(CX + 1, y, 3, 1, m.d); } // bust line
 }
 
 function arms(K, m, sleeve) { // sleeve = rows of cloth: 0 bare, 5 short, 14 long
   const { B, G, S } = K;
   const xL = CX - G.tw - G.aw, xR = CX + G.tw, y0 = G.ty;
-  if (G.build >= 3) { const mm = sleeve ? m : S; B.sym(xL + 1, y0 - 1, G.aw, 1, mm.h, mm.b); }
+  if (G.build >= 3 && G.body !== 'b') { const mm = sleeve ? m : S; B.sym(xL + 1, y0 - 1, G.aw, 1, mm.h, mm.b); }
   for (let r = 0; r < 17; r++) {
     const y = y0 + r, hand = r >= 14;
     const mm = r < sleeve ? m : S;
@@ -108,6 +119,7 @@ function head(K) {
   const ey = hy + 6, eye = '#17171d';
   if (K.blink) B.sym(CX - 5, ey + 1, 2, 1, S.d);
   else { B.sym(CX - 5, ey, 2, 2, eye); B.px(CX - 5, ey, '#ffffff'); B.px(CX + 3, ey, '#ffffff'); }
+  if (G.body === 'b') { const ly = K.blink ? ey + 1 : ey - 1; B.px(CX - 6, ly, eye); B.px(CX + 5, ly, eye); } // lashes
   B.px(CX, hy + 8, S.s);
   // mouth + brows by attitude
   const e = look.expr || 0, my = hy + 10;
@@ -462,6 +474,13 @@ const TOPS = {
   shirtless(K) {
     const { B, G, S } = K, y = G.ty, hw = G.tw;
     torso(K, S); arms(K, S, 0);
+    if (G.body === 'b') { // body B: sports top + toned stomach instead of a bare chest
+      const m = C.black;
+      for (let r = 2; r < 8; r++) { const w = thw(G, r); B.rect(CX - w, y + r, w * 2, 1, r === 7 ? m.s : m.b); B.px(CX - w, y + r, m.h); B.px(CX + w - 1, y + r, m.d); }
+      B.rect(CX - 3, y, 1, 2, m.b); B.rect(CX + 2, y, 1, 2, m.s); B.rect(CX - 1, y + 2, 2, 1, S.s);
+      B.rect(CX - 1, y + 9, 1, 5, S.s); if (G.build >= 2) for (const r of [10, 12]) { B.px(CX - 2, y + r, S.s); B.px(CX + 1, y + r, S.s); }
+      return;
+    }
     B.rect(CX - hw + 1, y + 5, hw - 2, 1, S.s); B.rect(CX + 1, y + 5, hw - 2, 1, S.d);
     B.rect(CX - 1, y + 1, 2, 4, S.s); B.px(CX - 3, y + 2, S.h); B.px(CX - 4, y + 2, S.h);
     for (const r of [8, 10, 12]) { B.px(CX - 2, y + r, S.s); B.px(CX + 1, y + r, S.s); }
@@ -615,12 +634,12 @@ function outline(B, color) {
 }
 
 /**
- * look: { skin, hair, hairColor, face, head, top, bottom, shoes, back, build 0..3, expr 0..2, rim }
+ * look: { body 'a'|'b', skin, hair, hairColor, face, head, top, bottom, shoes, back, build 0..3, expr 0..2, rim }
  * frame: { bob, blink }
  */
 export function compose(look, frame = {}) {
   const bob = frame.bob ? 1 : 0;
-  const B = new Buf(), G = geo(Math.max(0, Math.min(3, look.build || 0)), bob);
+  const B = new Buf(), G = geo(Math.max(0, Math.min(3, look.build || 0)), bob, look.body);
   const K = { B, G, look, blink: !!frame.blink, lw: 6, S: M(SKIN[look.skin] || SKIN.s2), H: M(HAIRC[look.hairColor] || HAIRC.black) };
   BACKS[look.back]?.(K);
   HAIR_BACK[look.hair]?.(K);
