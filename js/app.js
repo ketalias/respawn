@@ -364,7 +364,7 @@ function profile() {
       <div class="kv"><span>Відпочинок між підходами</span><div class="chips">${[0, 60, 90, 120, 180].map(v => `<button class="chip-b sm ${S.settings.rest === v ? 'on' : ''}" data-act="set-rest" data-v="${v}">${v ? v + 'с' : 'вимк'}</button>`).join('')}</div></div>
       <div class="kv col"><span>Збереження${tg ? ' · синхронізується з Telegram' : ' · на цьому пристрої'}</span><div class="chips"><button class="chip-b sm" data-act="export">Експорт</button><button class="chip-b sm" data-act="import">Імпорт</button><button class="chip-b sm danger" data-act="reset">Скинути все</button></div></div>
     </section>
-    <p class="note center"><button data-act="ver">RESPAWN · v1.2</button></p>`;
+    <p class="note center"><button data-act="ver">RESPAWN · v2.0</button></p>`;
 }
 
 /* ---------- render ---------- */
