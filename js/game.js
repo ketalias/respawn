@@ -301,6 +301,15 @@ export function buy(id) {
   return true;
 }
 export function equip(slot, key) { S.eq[slot] = key; S.manual[slot] = true; save(); }
+// saved outfits: 3 slots; wearing one skips anything the player doesn't own (anymore)
+const LOOK_SLOTS = ['body', 'hair', 'hairColor', 'skin', 'face', 'detail', 'head', 'top', 'bottom', 'shoes', 'hand', 'back', 'pet', 'aura'];
+export function saveLook(i) { S.looks[i] = { eq: Object.fromEntries(LOOK_SLOTS.map(k => [k, S.eq[k] ?? null])) }; save(); }
+export function wearLook(i) {
+  const L = S.looks[i]; if (!L) return false;
+  for (const [k, v] of Object.entries(L.eq)) if (v === null || has(`${k}:${v}`)) { S.eq[k] = v; S.manual[k] = true; }
+  save(); return true;
+}
+export function deleteLook(i) { S.looks[i] = null; save(); }
 
 /* ---------- money: the monthly income goal is a boss, every income is a hit ---------- */
 export function monthSum(m = ym()) {

@@ -846,6 +846,32 @@ const PETS = {
     B.px(11, 8, '#17171d'); B.px(10, 5, m.s); B.px(11, 5, m.b); B.rect(6, 6, 3, 1, '#17171d'); B.px(2, 9, m.s);
     B.rect(7, f ? 2 : 3, 2, 2, '#ffd23a'); B.px(7, f ? 2 : 3, '#fff6c2');
   },
+  // ---- 2.0 ----
+  dog(B, f) { // шиба: wags the tail
+    const m = M('#d98a3a'), w = '#f4ead8';
+    B.rect(3, 8, 10, 5, m.b); B.rect(3, 12, 10, 1, m.s); B.rect(5, 10, 6, 3, w);
+    B.rect(10, 3, 6, 6, m.b); B.rect(14, 4, 2, 5, m.s); B.rect(12, 7, 4, 2, w);
+    B.pts([[10, 2], [11, 2], [10, 1], [15, 2], [14, 2], [15, 1]], m.b); B.px(11, 2, '#f0c08a');
+    B.px(12, 5, '#17171d'); B.px(15, 7, '#17171d'); B.rect(10, 9, 5, 1, '#d8323c');
+    B.rect(4, 13, 2, 2, m.s); B.rect(10, 13, 2, 2, m.s);
+    B.pts(f ? [[2, 7], [1, 6], [2, 5], [3, 5]] : [[2, 8], [1, 7], [1, 6], [2, 5]], m.h);
+  },
+  rabbit(B, f) { // hops
+    const m = M('#f2f2f6'), y = f ? 1 : 0;
+    B.rect(3, 9 - y, 9, 5, m.b); B.rect(3, 13 - y, 9, 1, m.s); B.rect(10, 9 - y, 2, 5, m.s);
+    B.rect(9, 5 - y, 6, 5, m.b); B.rect(13, 6 - y, 2, 4, m.s);
+    B.rect(10, 1 - y + 1, 2, 4, m.b); B.rect(13, 1 - y + 1, 2, 4, m.s); B.px(10, 3 - y, '#f29ab8'); B.px(10, 4 - y, '#f29ab8');
+    B.px(12, 7 - y, '#17171d'); B.px(14, 8 - y, '#f29ab8'); B.rect(2, 10 - y, 2, 2, '#ffffff');
+    B.rect(4, 14 - y, 3, 1, m.s); B.rect(9, 14 - y, 2, 1, m.s);
+  },
+  cactus(B, f) { // in a pot, the flower opens and closes
+    const g = M('#3d9a5a');
+    B.rect(5, 12, 8, 4, '#b0623a'); B.rect(5, 12, 8, 1, '#d07a4a'); B.rect(11, 13, 2, 3, '#8a4a2a');
+    B.rect(7, 3, 4, 9, g.b); B.rect(10, 3, 1, 9, g.s); B.rect(8, 2, 2, 1, g.b);
+    B.rect(4, 6, 2, 4, g.b); B.rect(5, 9, 2, 1, g.b); B.rect(12, 5, 2, 4, g.s); B.rect(11, 8, 2, 1, g.s);
+    B.px(8, 6, '#17171d'); B.px(10, 6, '#17171d'); B.px(9, 8, '#f29ab8'); B.pts([[7, 4], [7, 10], [4, 7], [13, 6]], g.h);
+    if (f) { B.pts([[8, 0], [9, 0], [7, 1], [10, 1]], '#ff6b9a'); B.px(8, 1, '#ffd84a'); B.px(9, 1, '#ffd84a'); } else B.rect(8, 1, 2, 1, '#ff6b9a');
+  },
 };
 export const PW = 18, PH = 16;
 export function composePet(id, f) {

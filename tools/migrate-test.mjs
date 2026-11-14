@@ -142,7 +142,20 @@ for (const q of G.S.quests.filter(q => q.cat === 'calm')) G.completeQuest(q.id);
 const ev = G.drain().filter(e => e.t === 'sphere');
 ok(ev.some(e => e.item.id === 'hand:matcha') && G.S.owned.includes('hand:matcha'), 'Спокій reaches LV 3 in play → «Матча» + event', ev.map(e => e.item.id).join());
 
-/* ---------- 9. new player ---------- */
+/* ---------- 9. збережені образи ---------- */
+console.log('looks');
+load(v2);
+G.saveLook(1); const saved = { ...G.S.eq };
+G.equip('top', 'hoodie'); G.equip('head', null);
+G.S.looks[2] = { eq: { top: 'gown', hand: 'coffee' } }; // gown not owned, coffee not owned
+ok(G.wearLook(1) && G.S.eq.top === saved.top && G.S.eq.head === saved.head, 'wearing a saved look restores it');
+G.equip('hand', 'laptop'); G.wearLook(2);
+ok(G.S.eq.top === saved.top && G.S.eq.hand === 'laptop', 'items you do not own are skipped, never equipped');
+G.deleteLook(1); ok(!G.S.looks[1] && G.wearLook(1) === false, 'deleted look is gone');
+G.flush(); ok(JSON.parse(store['respawn.v1']).looks.length === 3, 'looks are saved');
+ok(['pet:dog', 'pet:rabbit', 'aura:sakura', 'scene:library', 'theme:mint', 'top:gown'].every(id => ALL.find(i => i.id === id)?.src?.at === 15), 'every sphere has a LV 15 reward');
+
+/* ---------- 10. new player ---------- */
 console.log('new player');
 const n = load(undefined);
 ok(Object.keys(n.stats).join() === Object.keys(CATS).join(), 'fresh stats = the 6 spheres');

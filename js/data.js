@@ -213,17 +213,20 @@ export const ITEMS = [
   I('hand', 'coffee', 'Кава', $(60)), I('hand', 'wrench', 'Гайковий ключ', $(90)), I('hand', 'laptop', 'Ноутбук', $(180), 'r'),
   I('hand', 'briefcase', 'Кейс', ach('act50'), 'r'), I('hand', 'calculator', 'Калькулятор', ach('fast'), 'e'), I('hand', 'moneybag', 'Мішок грошей', ach('m25'), 'e'),
 
+  I('pet', 'dog', 'Шиба', sp('body', 15), 'l'), I('pet', 'rabbit', 'Кролик', sp('people', 15), 'l'), I('pet', 'cactus', 'Кактус', $(180), 'r'),
   I('pet', 'piggy', 'Скарбничка', ach('m1'), 'r'), I('pet', 'duck', 'Гумова качка', ach('f1'), 'r'), I('pet', 'cat', 'Чорний кіт', $(300), 'e'), I('pet', 'drone', 'Дрон', $(450), 'e'),
 
   I('back', 'barbell', 'Штанга', ach('pr1'), 'r'), I('back', 'cape', 'Плащ', $(260), 'e'), I('back', 'katana', 'Катана', lv(18), 'e'),
   I('back', 'wings_dark', 'Темні крила', $(600), 'l'), I('back', 'wings', 'Крила', lv(40), 'l'),
 
+  I('aura', 'hearts', 'Сердечка', $(240), 'e', { sw: '#ff6b9a' }), I('aura', 'sakura', 'Сакура', sp('calm', 15), 'l', { sw: '#ffb7d0' }), I('aura', 'stars', 'Зорепад', $(360), 'e', { sw: '#cfe3ff' }),
   I('aura', 'glow', 'Сяйво', lv(5), 'r', { sw: '#ffffff' }), I('aura', 'fire', 'Полум\'я', lv(10), 'e', { sw: '#ff9a3c' }),
   I('aura', 'toxic', 'Токсик', $(240), 'e', { sw: '#7dff5a' }), I('aura', 'shadow', 'Тінь', ach('night'), 'e', { sw: '#9a5cff' }),
   I('aura', 'math', 'Формули', ach('drp5'), 'e', { sw: '#8fd3ff' }), I('aura', 'money', 'Грошопад', ach('boss3'), 'l', { sw: '#4ade80' }), I('aura', 'matrix', 'Матриця', ach('s_neo'), 'l', { sw: '#39ff7a' }),
   I('aura', 'volt', 'Блискавка', lv(20), 'e', { sw: '#6fe3ff' }), I('aura', 'spark', 'Золотий пил', lv(35), 'l', { sw: '#ffe27a' }),
   I('aura', 'cosmic', 'Космос', lv(45), 'l', { sw: '#b48cff' }),
 
+  I('scene', 'cafe', 'Кав\'ярня', $(260), 'r'), I('scene', 'park', 'Парк', $(260), 'r'), I('scene', 'yoga', 'Йога-студія', $(280), 'r'), I('scene', 'library', 'Бібліотека', sp('mind', 15), 'l'),
   I('scene', 'room', 'Кімната'), I('scene', 'gym', 'Качалка', lv(4)), I('scene', 'roof', 'Нічний дах', lv(12), 'r'),
   I('scene', 'office', 'Офіс', $(280), 'r'), I('scene', 'lab', 'Лабораторія', $(280), 'r'), I('scene', 'vault', 'Сховище', ach('boss6'), 'l'),
   I('scene', 'dojo', 'Додзьо', $(200), 'r'), I('scene', 'retro', 'Ретровейв', $(320), 'e'), I('scene', 'space', 'Орбіта', lv(35), 'l'),
@@ -233,12 +236,14 @@ export const ITEMS = [
   I('theme', 'blood', 'Кров', $(80), 'r', { sw: '#ff4d5a' }), I('theme', 'ice', 'Лід', $(80), 'r', { sw: '#7ecbff' }),
   I('theme', 'cash', 'Кеш', $(80), 'r', { sw: '#4ade80' }), I('theme', 'blueprint', 'Кресленик', $(80), 'r', { sw: '#5aa9ff' }), I('theme', 'amber', 'Термінал', ach('s_leet'), 'e', { sw: '#ffb347' }),
   I('theme', 'vapor', 'Вейпор', $(120), 'e', { sw: '#c78bff' }),
+  I('theme', 'sakura', 'Сакура', $(80), 'r', { sw: '#ffb7d0' }), I('theme', 'lavender', 'Лаванда', $(80), 'r', { sw: '#c4b5fd' }), I('theme', 'mint', 'М\'ята', sp('dis', 15), 'l', { sw: '#7ee8c4' }),
 ];
 export const ITEM = Object.fromEntries(ITEMS.map(i => [i.id, i]));
 export const THEMES = {
   mono: ['#f4f4f5', '#0a0a0c'], ps2: ['#3fe0c0', '#04110e'], acid: ['#c6ff4a', '#0c1200'], gold: ['#ffd257', '#161000'],
   blood: ['#ff4d5a', '#16000a'], ice: ['#7ecbff', '#00101c'], vapor: ['#c78bff', '#0e0018'],
   cash: ['#4ade80', '#03140a'], blueprint: ['#5aa9ff', '#00101e'], amber: ['#ffb347', '#1a0e00'],
+  sakura: ['#ffb7d0', '#1c0a12'], lavender: ['#c4b5fd', '#120c22'], mint: ['#7ee8c4', '#03140f'],
 };
 export const DEFAULT_EQ = {
   body: 'a', hair: 'messy', hairColor: 'black', skin: 's2', face: 'glasses', detail: null, head: null, top: 'tee_gray', bottom: 'jeans',

@@ -7,7 +7,9 @@ export const AURA = {
   glow: '#ffffff', fire: '#ff9a3c', volt: '#6fe3ff', cosmic: '#b48cff',
   toxic: '#7dff5a', shadow: '#9a5cff', spark: '#ffe27a',
   money: '#4ade80', matrix: '#39ff7a', math: '#8fd3ff',
+  hearts: '#ff6b9a', sakura: '#ffb7d0', stars: '#cfe3ff',
 };
+const HEART = '#.####.#.';
 // 3×3 chalk glyphs for the "formulas" aura: + × = π <
 const GLYPHS = ['.#.###.#.', '#.#.#.#.#', '###...###', '####.##.#', '..#.#...#'];
 
@@ -223,6 +225,95 @@ export const SCENES = {
     for (let y = FY + 1, k = 0; y < H; y += 5, k++) for (let x = (k % 2) * 10; x < W; x += 20) R(x, y, 10, 5, '#252b28');
   },
 
+  // ---- 2.0 ----
+  cafe(R, W, H, FY, t, acc) {
+    R(0, 0, W, H, '#2a1d17');
+    for (let y = 4, k = 0; y < FY - 22; y += 8, k++) { R(0, y, W, 1, '#30221b'); for (let x = k % 2 ? 6 : 0; x < W; x += 12) R(x, y, 1, 8, '#30221b'); }
+    R(0, FY - 22, W, 22, '#4a3326'); R(0, FY - 22, W, 1, '#6b4a33'); for (let x = 3; x < W; x += 8) R(x, FY - 20, 1, 18, '#3d2a1f');
+    // chalkboard menu
+    R(6, 12, 30, 26, '#6b4a2b'); R(8, 14, 26, 22, '#1f2a24'); R(11, 17, 13, 1, '#e8efe9');
+    for (const [y, w] of [[21, 15], [25, 12], [29, 17], [33, 10]]) { R(11, y, w, 1, '#9fb3a6'); R(30, y, 2, 1, acc); }
+    // window
+    R(84, 10, 30, 30, '#5a3f2c'); R(86, 12, 26, 26, '#1d2a44'); stars((x, y, w, h, c) => R(86 + x, 12 + y, w, h, c), 7, 26, 12, t, 30);
+    R(98, 12, 2, 26, '#5a3f2c'); R(86, 24, 26, 2, '#5a3f2c');
+    // pendant lamps
+    for (const x of [46, 74]) { R(x, 0, 1, 10, '#17110d'); R(x - 3, 10, 7, 3, '#d9a520'); R(x - 2, 13, 5, 1, '#fff2b8'); disc(R, x, 16, 9, 'rgba(255,214,120,.05)'); }
+    // counter + espresso machine
+    R(88, FY - 30, 32, 30, '#3a2a20'); R(88, FY - 31, 32, 2, '#c9b08a'); R(88, FY - 29, 32, 1, '#8a6a4a'); for (let x = 92; x < W; x += 9) R(x, FY - 26, 1, 24, '#30221b');
+    R(96, FY - 44, 16, 13, '#aeb3c2'); R(96, FY - 44, 16, 2, '#d9dce8'); R(99, FY - 40, 4, 4, '#17171d'); R(105, FY - 38, 4, 2, '#3a3a45'); R(100, FY - 35, 2, 3, '#f1f1f3');
+    if (t % 20 < 12) R(101, FY - 37 - (t % 4), 1, 1, 'rgba(255,255,255,.45)');
+    R(90, FY - 34, 3, 3, '#f1f1f3'); R(115, FY - 34, 3, 3, '#f1f1f3');
+    // little table with a cup
+    R(8, FY - 16, 22, 2, '#6b4a33'); R(18, FY - 14, 2, 14, '#3d2a1f'); R(13, FY - 1, 12, 1, '#3d2a1f'); R(12, FY - 20, 4, 4, '#f1f1f3'); R(16, FY - 19, 1, 2, '#f1f1f3');
+    // checker floor
+    R(0, FY, W, H - FY, '#2b2b31'); R(0, FY, W, 1, '#4a4a55');
+    for (let y = FY + 1, k = 0; y < H; y += 6, k++) for (let x = (k % 2) * 8; x < W; x += 16) R(x, y, 8, 6, '#3b3b44');
+  },
+
+  park(R, W, H, FY, t) {
+    const sky = ['#2a3a6a', '#3d4a80', '#6a5a8f', '#a86a86', '#e08a72', '#f2b36a'], bh = Math.ceil((FY - 10) / sky.length);
+    sky.forEach((c, i) => R(0, i * bh, W, bh, c));
+    disc(R, 30, FY - 30, 10, 'rgba(255,240,200,.18)'); disc(R, 30, FY - 30, 6, '#ffe2a0');
+    const cl = Math.floor((t / 3) % (W + 40)) - 20; R(cl, 14, 18, 3, 'rgba(255,255,255,.3)'); R(cl + 4, 12, 9, 2, 'rgba(255,255,255,.3)');
+    for (let x = 0; x < W; x++) { const h = Math.floor(8 + 5 * Math.sin(x * 0.07) + 3 * Math.sin(x * 0.19)); R(x, FY - 10 - h, 1, h, '#3b5a4a'); }
+    const tree = (x, s) => { R(x - 1, FY - 10 - s, 3, s + 10, '#3a2a20'); disc(R, x, FY - 14 - s, s, '#2f6a45'); disc(R, x - 3, FY - 12 - s, s - 3, '#3d8a55'); R(x - 2, FY - 18 - s, 2, 2, '#5aa86a'); };
+    tree(12, 12); tree(106, 14); tree(90, 9);
+    R(28, FY - 34, 2, 34, '#1c1c22'); R(25, FY - 38, 8, 4, '#1c1c22'); R(26, FY - 37, 6, 2, t % 30 < 28 ? '#ffe27a' : '#b89a3a'); disc(R, 29, FY - 36, 8, 'rgba(255,226,122,.07)');
+    R(0, FY - 10, W, 10, '#3d7a4a'); for (let x = 1; x < W; x += 3) R(x, FY - 11 - (x % 2), 1, 2, '#4f9a5a');
+    R(70, FY - 15, 22, 2, '#8a5a2b'); R(70, FY - 10, 22, 2, '#a06a33'); R(72, FY - 8, 2, 8, '#3a2a20'); R(88, FY - 8, 2, 8, '#3a2a20');
+    R(0, FY, W, H - FY, '#3d7a4a'); R((W >> 1) - 22, FY, 44, H - FY, '#b8a07a'); R((W >> 1) - 22, FY, 44, 1, '#d8c29a');
+    for (let i = 0; i < 18; i++) { const x = Math.floor(rnd(i + 900) * W); if (Math.abs(x - (W >> 1)) > 23) R(x, FY + 2 + Math.floor(rnd(i + 930) * (H - FY - 3)), 1, 1, rnd(i + 960) > 0.5 ? '#ffd84a' : '#ff8ab0'); }
+  },
+
+  yoga(R, W, H, FY, t) {
+    R(0, 0, W, H, '#2c2731');
+    // arched window at sunrise
+    R(38, 22, 44, 38, '#4a4252'); disc(R, 60, 24, 22, '#4a4252');
+    const g = ['#33335e', '#5a4478', '#9a5a80', '#d8847a', '#f2b884'];
+    for (let i = 0; i < 5; i++) R(40, 24 + i * 7, 40, 7, g[i]);
+    for (let y = -20; y < 0; y++) { const w = Math.floor(Math.sqrt(400 - y * y)); R(60 - w, 24 + y, w * 2, 1, g[0]); }
+    disc(R, 60, 56, 7, '#ffe2b0'); R(40, 58, 40, 2, '#4a4252'); R(59, 4, 2, 54, '#4a4252'); R(40, 40, 40, 2, '#4a4252');
+    // plants
+    R(6, FY - 10, 10, 10, '#b0623a'); R(6, FY - 10, 10, 1, '#d07a4a');
+    for (const [x, h, c] of [[8, 14, '#3d8a55'], [11, 20, '#2f6a45'], [14, 12, '#4f9a5a'], [10, 9, '#5aa86a']]) R(x, FY - 10 - h, 2, h, c);
+    disc(R, 108, FY - 26, 9, '#2f6a45'); disc(R, 104, FY - 30, 6, '#3d8a55'); R(107, FY - 18, 2, 8, '#3a2a20'); R(101, FY - 10, 14, 10, '#d8c9a3');
+    // rolled mats + candles
+    R(88, FY - 24, 5, 24, '#8a5cd6'); R(88, FY - 25, 5, 2, '#b48cff'); R(94, FY - 20, 5, 20, '#22c4a4'); R(94, FY - 21, 5, 2, '#7ee8c4');
+    for (const x of [22, 27]) { R(x, FY - 6, 3, 6, '#f2ead8'); R(x + 1, FY - 8 - (t % 6 < 3 ? 0 : 1), 1, 2, '#ffb347'); disc(R, x + 1, FY - 8, 4, 'rgba(255,180,80,.06)'); }
+    // warm floor + light from the window
+    R(0, FY, W, H - FY, '#6b4f3a'); R(0, FY, W, 1, '#8a6a4a');
+    for (let y = FY + 4, k = 0; y < H; y += 4, k++) { R(0, y, W, 1, '#5a4130'); for (let x = k % 2 ? 10 : 30; x < W; x += 40) R(x, y - 3, 1, 3, '#5a4130'); }
+    for (let y = FY + 1; y < H; y++) R(42 - (y - FY), y, 36 + (y - FY) * 2, 1, 'rgba(255,200,150,.05)');
+  },
+
+  library(R, W, H, FY, t) {
+    R(0, 0, W, H, '#1f1915');
+    const cols = ['#8a2a2a', '#2a4a8a', '#2a6a4a', '#8a6a2a', '#5a2a6a', '#c9b08a', '#3a3a45'];
+    const shelf = (x0, w) => {
+      R(x0, 6, w, FY - 6, '#3a2618'); R(x0, 6, w, 2, '#5a3a24');
+      for (let sy = 10; sy < FY - 10; sy += 16) {
+        R(x0 + 2, sy + 13, w - 4, 2, '#5a3a24');
+        for (let x = x0 + 3; x < x0 + w - 5;) {
+          const bw = 2 + Math.floor(rnd(x * 1.3 + sy) * 3), bh = 9 + Math.floor(rnd(x * 2.1 + sy) * 4);
+          R(x, sy + 13 - bh, bw, bh, cols[Math.floor(rnd(x + sy * 7) * cols.length)]); R(x, sy + 15 - bh, bw, 1, 'rgba(255,230,160,.3)');
+          x += bw + (rnd(x + sy) > 0.85 ? 2 : 0);
+        }
+      }
+    };
+    shelf(2, 34); shelf(84, 34);
+    R(44, 8, 32, 34, '#3a2618'); disc(R, 60, 18, 14, '#3a2618'); R(47, 18, 26, 22, '#162040');
+    for (let y = -12; y < 0; y++) { const w = Math.floor(Math.sqrt(144 - y * y)); R(60 - w, 18 + y, w * 2, 1, '#162040'); }
+    stars((x, y, w, h, c) => R(48 + x, 8 + y, w, h, c), 7, 24, 30, t, 40); R(59, 6, 2, 34, '#3a2618'); R(47, 28, 26, 2, '#3a2618');
+    disc(R, 66, 14, 2, '#f1eed2');
+    // book stacks on the floor + a reading lamp glow
+    for (let i = 0; i < 3; i++) R(36 - i, FY - 4 - i * 3, 9 - i * 2 + i, 3, cols[i]);
+    for (let i = 0; i < 4; i++) R(78 + i, FY - 4 - i * 3, 8 - i * 2 + i, 3, cols[(i + 3) % cols.length]);
+    disc(R, 60, 10, 18, 'rgba(255,220,150,.03)');
+    // rug + floor
+    R(0, FY, W, H - FY, '#2a2019'); R(0, FY, W, 1, '#4a3828');
+    R(22, FY + 3, 76, H - FY - 5, '#5a2a2a'); R(24, FY + 5, 72, H - FY - 9, '#7a3a34'); for (let x = 27; x < 94; x += 6) { R(x, FY + 7, 2, 1, '#c9a13a'); R(x + 3, H - 6, 2, 1, '#c9a13a'); }
+  },
+
   vault(R, W, H, FY, t) {
     R(0, 0, W, H, '#20232a');
     for (let x = 0; x < W; x += 24) { R(x, 0, 1, FY, '#2a2e37'); for (let y = 6; y < FY; y += 18) { R(x + 3, y, 1, 1, '#3b4050'); R(x + 20, y, 1, 1, '#3b4050'); } }
@@ -331,9 +422,15 @@ export class Stage {
     const a = this.aura, t = this.t, P = this.parts, feet = oy + FEET;
     if (!a) return;
     if (!front) {
-      if (a === 'glow' || a === 'spark' || a === 'money' || a === 'math') {
+      if (a === 'glow' || a === 'spark' || a === 'money' || a === 'math' || a === 'hearts' || a === 'stars') {
         const r = 30 + (Math.floor(t / 6) % 2) * 2;
-        for (let i = 0; i < 3; i++) disc(R, cx, oy + 36, r - i * 7, a === 'glow' ? 'rgba(255,255,255,.045)' : a === 'money' ? 'rgba(74,222,128,.045)' : a === 'math' ? 'rgba(143,211,255,.04)' : 'rgba(255,226,122,.05)');
+        for (let i = 0; i < 3; i++) disc(R, cx, oy + 36, r - i * 7, a === 'glow' ? 'rgba(255,255,255,.045)' : a === 'money' ? 'rgba(74,222,128,.045)' : a === 'math' ? 'rgba(143,211,255,.04)' : a === 'hearts' ? 'rgba(255,107,154,.045)' : a === 'stars' ? 'rgba(150,180,255,.04)' : 'rgba(255,226,122,.05)');
+      }
+      if (a === 'hearts' && t % 3 === 0) P.push({ x: cx - 24 + Math.random() * 48, y: feet - 8 - Math.random() * 24, vx: 0, vy: -0.5 - Math.random() * 0.4, l: 0, m: 26 + Math.random() * 18, f: Math.random() < 0.4, s: Math.random() * 6 });
+      if (a === 'sakura' && t % 2 === 0) P.push({ x: cx - 40 + Math.random() * 64, y: oy - 8 - Math.random() * 6, vx: 0.3 + Math.random() * 0.3, vy: 0.55 + Math.random() * 0.45, l: 0, m: 140, f: Math.random() < 0.4, s: Math.random() * 6, k: Math.random() < 0.5 });
+      if (a === 'stars') {
+        if (t % 7 === 0) P.push({ x: cx - 44 + Math.random() * 40, y: oy - 8 + Math.random() * 24, vx: 1.9, vy: 1.2, l: 0, m: 26, f: Math.random() < 0.5, tail: true });
+        if (t % 3 === 0) P.push({ x: cx - 26 + Math.random() * 52, y: oy + 2 + Math.random() * 60, vx: 0, vy: 0, l: 0, m: 8 + Math.random() * 6, f: Math.random() < 0.5 });
       }
       // spawn
       if (a === 'fire') for (let i = 0; i < 3; i++) P.push({ x: cx - 16 + Math.random() * 32, y: feet - Math.random() * 6, vx: (Math.random() - 0.5) * 0.6, vy: -1.2 - Math.random() * 1.6, l: 0, m: 10 + Math.random() * 12, f: Math.random() < 0.25 });
@@ -349,7 +446,7 @@ export class Stage {
         for (let i = 0; i < 5; i++) { const nx = x + (Math.random() - 0.5) * 9, ny = y + 5 + Math.random() * 5; seg.push([x, y, nx, ny]); x = nx; y = ny; }
         P.push({ bolt: seg, l: 0, m: 3, f: Math.random() < 0.5 });
       }
-      for (const p of P) { if ((a === 'money' || a === 'matrix') && p.y > feet + 2) p.l = p.m; p.l++; if (!p.bolt) { p.x += p.vx + (p.s !== undefined ? Math.sin((t + p.s * 9) / 5) * 0.4 : 0); p.y += p.vy; } }
+      for (const p of P) { if ((a === 'money' || a === 'matrix' || a === 'sakura' || a === 'stars') && p.y > feet + 2) p.l = p.m; p.l++; if (!p.bolt) { p.x += p.vx + (p.s !== undefined ? Math.sin((t + p.s * 9) / 5) * 0.4 : 0); p.y += p.vy; } }
       for (let i = P.length - 1; i >= 0; i--) if (P[i].l > P[i].m) P.splice(i, 1);
       if (P.length > 160) P.splice(0, P.length - 160);
     }
@@ -365,6 +462,12 @@ export class Stage {
       else if (a === 'money') { if (p.k) { R(x, y, 2, 2, '#e2b33c'); R(x, y, 1, 1, '#fff6c2'); } else { const w = (t + Math.floor(p.s)) % 6 < 3 ? 4 : 2; R(x, y, w, 2, '#3ddc84'); R(x + (w >> 1) - 1, y, 1, 2, '#1f6b3a'); } }
       else if (a === 'matrix') { for (let i = 0; i < p.n; i++) R(x, y - i * 2, 1, 1, i === 0 ? '#e6ffe9' : i < 3 ? '#39ff7a' : '#147a35'); }
       else if (a === 'math') { const g = GLYPHS[p.g], c2 = k > 0.8 ? 'rgba(143,211,255,.4)' : p.g % 2 ? '#ffffff' : '#8fd3ff'; for (let i = 0; i < 9; i++) if (g[i] === '#') R(x + (i % 3), y + Math.floor(i / 3), 1, 1, c2); }
+      else if (a === 'hearts') { const c2 = k < 0.6 ? '#ff6b9a' : '#c8456e'; for (let i = 0; i < 9; i++) if (HEART[i] === '#') R(x + (i % 3), y + Math.floor(i / 3), 1, 1, c2); if (k < 0.5) R(x, y, 1, 1, '#ffd0e0'); }
+      else if (a === 'sakura') { const w = (t + Math.floor(p.s * 3)) % 8 < 4; R(x, y, w ? 2 : 1, w ? 1 : 2, p.k ? '#ffb7d0' : '#ffd6e4'); R(x, y, 1, 1, '#ff8ab0'); }
+      else if (a === 'stars') {
+        if (p.tail) { R(x, y, 1, 1, '#ffffff'); for (let i = 1; i < 6; i++) R(Math.round(p.x - i * 1.6), Math.round(p.y - i), 1, 1, `rgba(207,227,255,${(0.8 - i * 0.14).toFixed(2)})`); }
+        else { const on = k > 0.3 && k < 0.7; R(x, y, 1, 1, '#cfe3ff'); if (on) { R(x - 1, y, 3, 1, 'rgba(207,227,255,.6)'); R(x, y - 1, 1, 3, 'rgba(207,227,255,.6)'); } }
+      }
       else if (a === 'spark') { const on = k > 0.25 && k < 0.75; R(x, y, 1, 1, '#fff6c2'); if (on) { R(x - 1, y, 3, 1, '#ffe27a'); R(x, y - 1, 1, 3, '#ffe27a'); R(x, y, 1, 1, '#ffffff'); } }
     }
     if (a === 'cosmic') {

@@ -297,7 +297,13 @@ function locker() {
           <small>${s.owned ? (on ? 'одягнено' : 'маєш') : s.sp ? `${icon(CATS[s.sp].icon)}LV ${s.at}` : s.price ? `${icon('coin')}${s.price}` : s.lv ? `${icon('lock')}LV ${s.lv}` : `${icon('medal')}ачівка`}</small>
         </button>`;
       }).join('')}
-    </div>`;
+    </div>
+    ${sec('Образи', '<span class="count">тап — надіти</span>')}
+    <div class="looks">${[0, 1, 2].map(i => {
+      const L = S.looks[i];
+      return L ? `<div class="look"><button class="look-b" data-act="look-wear" data-i="${i}">${cv(() => spriteCanvas(G.lookOf({ ...S.eq, ...L.eq }), CROP.body), 'th full')}<b>Образ ${i + 1}</b></button><button class="look-x" data-act="look-del" data-i="${i}" aria-label="Видалити образ">${icon('x')}</button></div>`
+        : `<button class="look empty" data-act="look-save" data-i="${i}">${icon('plus')}<b>Зберегти поточний</b></button>`;
+    }).join('')}</div>`;
 }
 
 /* ---------- PROFILE ---------- */
@@ -640,6 +646,9 @@ const A = {
     if (G.has(it.id)) { ui.tryOn = null; G.equip(it.slot, it.key); sfx('done'); buzz('light'); stages.locker?.st.jump(); }
     else { ui.tryOn = it.id; sfx('tap'); buzz('light'); render(); view.scrollTop = 0; }
   },
+  'look-save': el => { G.saveLook(+el.dataset.i); sfx('buy'); buzz('light'); toast(`${icon('shirt')}<div><b>Образ ${+el.dataset.i + 1} збережено</b><small>Тап по ньому — і він на тобі</small></div>`); },
+  'look-wear': el => { if (G.wearLook(+el.dataset.i)) { sfx('done'); buzz('light'); stages.locker?.st.jump(); } },
+  'look-del': async el => { if (await ask(`Видалити образ ${+el.dataset.i + 1}?`)) { G.deleteLook(+el.dataset.i); sfx('undo'); } },
   'item-none': () => { ui.tryOn = null; G.equip(ui.slot, null); sfx('undo'); },
   'tryon-clear': () => { ui.tryOn = null; render(); },
   buy: (el, e) => {
