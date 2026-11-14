@@ -36,13 +36,14 @@ function hydrate(raw) {
   if (!raw || typeof raw !== 'object') return f;
   const s = { ...f, ...raw };
   for (const k of ['streak', 'eq', 'counters', 'settings', 'money', 'acts', 'drill']) s[k] = { ...f[k], ...(raw[k] || {}) };
-  // v1 saves had str/int/dis/vit — fold them into the new attributes
+  // v1 saves had str/int/dis/vit — fold them into the new attributes.
+  // Keys and categories from newer versions are kept as-is: never dropped, never remapped.
   const old = raw.stats || {};
   s.stats = { ...f.stats };
-  for (const [k, v] of Object.entries(old)) { const to = OLD_CATS[k] || k; if (to in s.stats) s.stats[to] += v || 0; }
-  for (const q of s.quests) if (OLD_CATS[q.cat]) q.cat = OLD_CATS[q.cat]; else if (!CATS[q.cat]) q.cat = 'dis';
+  for (const [k, v] of Object.entries(old)) { const to = OLD_CATS[k] || k; s.stats[to] = (s.stats[to] || 0) + (+v || 0); }
+  for (const q of s.quests) if (OLD_CATS[q.cat]) q.cat = OLD_CATS[q.cat]; else if (!q.cat) q.cat = 'dis';
   if (!Array.isArray(s.skills)) s.skills = f.skills;
-  s.v = 2;
+  s.v = Math.max(2, +raw.v || 0);
   return s;
 }
 
@@ -198,7 +199,7 @@ export function deleteQuest(id) { S.quests = S.quests.filter(q => q.id !== id); 
 export function completeQuest(id) {
   const q = S.quests.find(q => q.id === id);
   if (!q || isDone(q)) return;
-  const t = today(), D = DIFFS[q.diff], hour = new Date().getHours();
+  const t = today(), D = DIFFS[q.diff] || DIFFS.m, hour = new Date().getHours();
   touchStreak();
   const crit = Math.random() < 0.08;
   const xp = Math.round(D.xp * combo()) * (crit ? 2 : 1);
